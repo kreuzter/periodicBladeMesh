@@ -10,9 +10,3 @@
   - extruded BL (gmsh internal tool)
   - transfinite mesh around blade (theoretically more stable and versatile)
 - periodicities matching in geometry and mesh (the solver does not need to perform any kind of interpolation)
-
-### [schreiber84](https://doi.org/10.1115/1.3239561) transonic compressor blade
-
-- LE and TE computed from chord, suction and pressure side with assumption of elliptical edge
-- extruded BL
-- periodicities matching in geometry
