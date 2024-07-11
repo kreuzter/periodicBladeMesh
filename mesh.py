@@ -5,7 +5,7 @@ import warnings
 import gmsh
 import numpy as np
 
-def lengths(angle, length): return np.cos(np.deg2rad(angle))*length, np.sin(np.deg2rad(angle))*length
+from auxiliaryFunctions import *
 
 parser = argparse.ArgumentParser(
           prog='(py)gmsh based tool for the simpliest turbomachinery mesh',
@@ -122,26 +122,23 @@ if mesh['boundary layer'] != 'transfinite':
   surface_periodicity_pressure = volume[5][1]
 
 else:
-  blProperties = mesh['boundary layer']['BL properties']
-  points_inflated_pressure = np.zeros(numProfilePoints, dtype=int)
-  points_inflated_suction  = np.zeros(numProfilePoints, dtype=int)
+  blProperties = mesh['BL properties']
+  coor_pressureInflated = inflateSide(coor_pressure, coor_suction, blProperties['thickness'], a =  1)
+  coor_suctionInflated  = inflateSide(coor_suction, coor_pressure, blProperties['thickness'], a = -1)
 
-  xLen_inflated_0, yLen_inflated_0 = lengths(geometry['inlet flow angle'],blProperties['thickness'])
+  points_pressureInflated = np.zeros(numProfilePoints  , dtype=int)
+  points_suctionInflated  = np.zeros(numProfilePoints  , dtype=int)
+  
+  for i in range(numProfilePoints):
+    points_pressureInflated[i] = gmsh.model.occ.addPoint(coor_pressureInflated[ i, 0 ], coor_pressureInflated[ i, 1 ], 0)
+    points_suctionInflated[i]  = gmsh.model.occ.addPoint( coor_suctionInflated[ i, 0 ],  coor_suctionInflated[ i, 1 ], 0)
 
-  points_inflated_pressure[0] = gmsh.model.occ.addPoint(
-      (coor_pressure[ 0, 0 ]+coor_suction[ 0, 0 ])/2 - xLen_inflated_0, 
-      (coor_pressure[ 0, 1 ]+coor_suction[ 0, 1 ])/2 - yLen_inflated_0,
-      0
-      )
-  points_inflated_suction[0] = points_inflated_pressure[0]
+  line_suctionInflated = gmsh.model.occ.add_bspline(  points_suctionInflated)
+  line_pressureInflated = gmsh.model.occ.add_bspline(points_pressureInflated)
+  line_midlineInflated_i = gmsh.model.occ.add_line(points_pressure[ 0], points_pressureInflated[ 0])
+  line_midlineInflated_o = gmsh.model.occ.add_line(points_pressure[-1], points_pressureInflated[-1])
 
-  xLen_inflated_l, yLen_inflated_l = lengths(-geometry['outlet flow angle'],blProperties['thickness'])
-  points_inflated_pressure[-1] = gmsh.model.occ.addPoint(
-      (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_inflated_l, 
-      (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_inflated_l,
-      0
-      )
-  points_inflated_suction[-1] = points_inflated_pressure[-1]
+'''
 
 if mesh['periodicities internal match']:
   translation = [1, 0, 0, 2*xLen_pitch, 
@@ -203,19 +200,20 @@ if mesh['boundary layer'] == 'extruded':
   gmsh.model.mesh.field.setNumber(extrudedBL, 'Ratio', mesh['BL properties']['ratio']) 
   gmsh.model.mesh.field.setNumber(extrudedBL, 'Quads', 1)
   gmsh.model.mesh.field.setNumber(extrudedBL, 'Thickness', mesh['BL properties']['thickness'])
+  gmsh.option.setNumber('Mesh.BoundaryLayerFanElements', 0)
   gmsh.model.mesh.field.setAsBoundaryLayer(extrudedBL)
 
 gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
 gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
 gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", mesh['mesh size from curvature'])
-gmsh.option.setNumber('Mesh.BoundaryLayerFanElements', 0)
+
 
 gmsh.option.setNumber("Mesh.CharacteristicLengthMax", mesh["max size"] )
 gmsh.option.setNumber("Mesh.CharacteristicLengthMin", mesh["min size"]  )
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
 
-gmsh.model.mesh.generate(3)
-
+if f['create mesh']: gmsh.model.mesh.generate(3)
+'''
 gmsh.model.geo.synchronize()
 gmsh.model.occ.synchronize()
 if f['save']:    gmsh.write(f['working directory']+f['name']+f['format'])
