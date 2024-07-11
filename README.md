@@ -1,6 +1,11 @@
 # periodicBladeMesh
 (py)gmsh based tool for the simpliest turbomachinery mesh
 
+Internal references can be used in json files. E.g.:
+```
+  "scaled by"  : {"$ref": "#/geometry/true chord"},
+```
+
 ## Test cases:
 
 ### [SPLEEN](https://doi.org/10.5281/zenodo.7264761) turbine blade

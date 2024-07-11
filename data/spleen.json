@@ -1,32 +1,41 @@
 { 
   "name" : "spleen",
   "working directory" : "/home/terezie/documents/PhD/periodicBladeMesh/data/spleen/",
+  "domain" : {
+    "thickness" : 160e-3,
+    "length of inlet"  : 50e-3,
+    "length of outlet" : 50e-3
+  },
   "geometry" : {
-    "inlet flow angle"         : 37.3000,
-    "outlet flow angle"        : 53.8000,
-    "stagger angle"            : 24.4000,
-    "pitch-to-chord"           : 0.6302,
-    "axial chord"              : 47.6144e-3,
-    "true chord"               : 52.2850e-3,
-    "pitch"                    : 32.9507e-3,
-    "trailing edge radius"     : 0.4350e-3
-  },
-  "profile" : {
-    "scaled"           : false,
-    "scaled by"        : "true chord",
-    "delimiter"        : "\t",
-    "name of suction"  : "suction.csv",
-    "name of pressure" : "pressure.csv"
-  },
-  "boundary layer" : {
-    "separate" : true,
-    "extruded" : true
+    "profile": {
+      "scaled by"                : false,
+      "delimiter"                : "\t",
+      "name of suction"          : "suction.csv",
+      "name of pressure"         : "pressure.csv"
+    },
+    "inlet flow angle"     : 37.3000,
+    "outlet flow angle"    : 53.8000,
+    "stagger angle"        : 24.4000,
+    "pitch-to-chord"       : 0.6302,
+    "axial chord"          : 47.6144e-3,
+    "true chord"           : 52.2850e-3,
+    "pitch"                : 32.9507e-3,
+    "trailing edge radius" : 0.4350e-3
   },
   "mesh" : {
     "baseline size" : 1e-3,
-    "periodicities internal match" : false
+    "min size"      : 1e-4,
+    "max size"      : 1e-2,
+    "n_layers_z"    : 20,
+    "periodicities internal match" : false,
+    "wake lenght"                  : 50e-3,
+    "boundary layer type" : "extruded",
+    "extruded" :  {
+      "growth ratio" : 1.1,
+      "thickness" : 2e-3
+    }
   },
   "run GUI" : true,
-  "save"    : true,
-  "format"  : ".unv"
+  "save"    : false,
+  "format"  : ".msh"
 }
