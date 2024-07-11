@@ -5,6 +5,8 @@ import warnings
 import gmsh
 import numpy as np
 
+def lengths(angle, length): return np.cos(np.deg2rad(angle))*length, np.sin(np.deg2rad(angle))*length
+
 parser = argparse.ArgumentParser(
           prog='(py)gmsh based tool for the simpliest turbomachinery mesh',
           description='For more information see README.md.')
@@ -60,16 +62,15 @@ for i in range(numProfilePoints):
     0
     )
 
-xLen_inlet = np.cos(np.deg2rad(geometry['inlet flow angle']))*domain['length of inlet']
-yLen_inlet = np.sin(np.deg2rad(geometry['inlet flow angle']))*domain['length of inlet']
+xLen_inlet, yLen_inlet = lengths(geometry['inlet flow angle'],domain['length of inlet'])
+
 points_midline[0] =   gmsh.model.occ.addPoint(
     (coor_pressure[ 0, 0 ]+coor_suction[ 0, 0 ])/2 - xLen_inlet, 
     (coor_pressure[ 0, 1 ]+coor_suction[ 0, 1 ])/2 - yLen_inlet,
     0
     )
 
-xLen_outlet = np.cos(np.deg2rad(-geometry['outlet flow angle']))*domain['length of outlet']
-yLen_outlet = np.sin(np.deg2rad(-geometry['outlet flow angle']))*domain['length of outlet']
+xLen_outlet, yLen_outlet = lengths(-geometry['outlet flow angle'],domain['length of outlet'])
 points_midline[-1] =   gmsh.model.occ.addPoint(
     (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_outlet, 
     (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_outlet,
@@ -80,8 +81,7 @@ line_midline = gmsh.model.occ.add_bspline(points_midline)
 line_suction = gmsh.model.occ.add_bspline(points_suction)
 line_pressure = gmsh.model.occ.add_bspline(points_pressure)
 
-xLen_pitch = np.sin(np.deg2rad(geometry['stagger angle']))*geometry['pitch']/2
-yLen_pitch = np.cos(np.deg2rad(geometry['stagger angle']))*geometry['pitch']/2
+yLen_pitch, xLen_pitch = lengths(geometry['stagger angle'], geometry['pitch']/2)
 
 line_upperPeriodicity = gmsh.model.occ.copy([(1, line_midline)])
 points_upperPeriodicity = gmsh.model.occ.copy([(0, points_midline[0]), (0, points_midline[-1])])
@@ -99,36 +99,62 @@ line_outlet = gmsh.model.occ.add_line(points_lowerPeriodicity[-1][1], points_upp
 loop_outer = gmsh.model.occ.add_curve_loop([line_inlet, line_upperPeriodicity[0][1], -line_outlet, -line_lowerPeriodicity[0][1]])
 loop_blade = gmsh.model.occ.add_curve_loop([line_pressure, -line_suction])
 
-surface_whole = gmsh.model.occ.addPlaneSurface([loop_outer, loop_blade])
+if mesh['boundary layer'] != 'transfinite':
 
-volume = gmsh.model.occ.extrude([(2,surface_whole)], 0, 0, domain['thickness'], [mesh['n_layers_z']], recombine=True)
+  surface_whole = gmsh.model.occ.addPlaneSurface([loop_outer, loop_blade])
 
-gmsh.model.occ.synchronize()
+  volume = gmsh.model.occ.extrude([(2,surface_whole)], 0, 0, domain['thickness'], [mesh['n_layers_z']], recombine=True)
 
-gmsh.model.addPhysicalGroup(2, [surface_whole], name = "back" )
-gmsh.model.addPhysicalGroup(2, [volume[0][1]], name = "front" )
-gmsh.model.addPhysicalGroup(2, [volume[2][1]], name = "inlet" )
-gmsh.model.addPhysicalGroup(2, [volume[4][1]], name = "outlet" )
-gmsh.model.addPhysicalGroup(2, [volume[3][1]], name = "periodicity_suction" )
-gmsh.model.addPhysicalGroup(2, [volume[5][1]], name = "periodicity_pressure" )
-gmsh.model.addPhysicalGroup(2, [volume[6][1]], name = "blade_pressure" )
-gmsh.model.addPhysicalGroup(2, [volume[7][1]], name = "blade_suction" )
+  gmsh.model.occ.synchronize()
 
-gmsh.model.addPhysicalGroup(3, [volume[1][1]], name = "fluid" )
+  gmsh.model.addPhysicalGroup(2, [surface_whole], name = "back" )
+  gmsh.model.addPhysicalGroup(2, [volume[0][1]], name = "front" )
+  gmsh.model.addPhysicalGroup(2, [volume[2][1]], name = "inlet" )
+  gmsh.model.addPhysicalGroup(2, [volume[4][1]], name = "outlet" )
+  gmsh.model.addPhysicalGroup(2, [volume[3][1]], name = "periodicity_suction" )
+  gmsh.model.addPhysicalGroup(2, [volume[5][1]], name = "periodicity_pressure" )
+  gmsh.model.addPhysicalGroup(2, [volume[6][1]], name = "blade_pressure" )
+  gmsh.model.addPhysicalGroup(2, [volume[7][1]], name = "blade_suction" )
+
+  gmsh.model.addPhysicalGroup(3, [volume[1][1]], name = "fluid" )
+  
+  surface_periodicity_suction  = volume[3][1]
+  surface_periodicity_pressure = volume[5][1]
+
+else:
+  blProperties = mesh['boundary layer']['BL properties']
+  points_inflated_pressure = np.zeros(numProfilePoints, dtype=int)
+  points_inflated_suction  = np.zeros(numProfilePoints, dtype=int)
+
+  xLen_inflated_0, yLen_inflated_0 = lengths(geometry['inlet flow angle'],blProperties['thickness'])
+
+  points_inflated_pressure[0] = gmsh.model.occ.addPoint(
+      (coor_pressure[ 0, 0 ]+coor_suction[ 0, 0 ])/2 - xLen_inflated_0, 
+      (coor_pressure[ 0, 1 ]+coor_suction[ 0, 1 ])/2 - yLen_inflated_0,
+      0
+      )
+  points_inflated_suction[0] = points_inflated_pressure[0]
+
+  xLen_inflated_l, yLen_inflated_l = lengths(-geometry['outlet flow angle'],blProperties['thickness'])
+  points_inflated_pressure[-1] = gmsh.model.occ.addPoint(
+      (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_inflated_l, 
+      (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_inflated_l,
+      0
+      )
+  points_inflated_suction[-1] = points_inflated_pressure[-1]
 
 if mesh['periodicities internal match']:
   translation = [1, 0, 0, 2*xLen_pitch, 
                  0, 1, 0, 2*yLen_pitch, 
                  0, 0, 1, 0, 
                  0, 0, 0, 1]
-  gmsh.model.mesh.setPeriodic(2, [volume[3][1]], [volume[5][1]], translation)
+  gmsh.model.mesh.setPeriodic(2, [surface_periodicity_suction], [surface_periodicity_pressure], translation)
 
 refinementFields  = []
 
 if mesh['refine wake']:
   wake = mesh['wake']
-  xLen_wake = np.cos(np.deg2rad(-geometry['outlet flow angle']))*wake['length']
-  yLen_wake = np.sin(np.deg2rad(-geometry['outlet flow angle']))*wake['length']
+  xLen_wake, yLen_wake = lengths(-geometry['outlet flow angle'],wake['length'])
   point_wake = gmsh.model.occ.addPoint(
     (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_wake, 
     (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_wake,
@@ -173,10 +199,10 @@ if mesh['boundary layer'] == 'extruded':
 
   extrudedBL = gmsh.model.mesh.field.add('BoundaryLayer')
   gmsh.model.mesh.field.setNumbers(extrudedBL, 'CurvesList', [line_suction, line_pressure])
-  gmsh.model.mesh.field.setNumber(extrudedBL, 'Size', mesh['extruded']['size']) 
-  gmsh.model.mesh.field.setNumber(extrudedBL, 'Ratio', mesh['extruded']['ratio']) 
+  gmsh.model.mesh.field.setNumber(extrudedBL, 'Size', mesh['BL properties']['size']) 
+  gmsh.model.mesh.field.setNumber(extrudedBL, 'Ratio', mesh['BL properties']['ratio']) 
   gmsh.model.mesh.field.setNumber(extrudedBL, 'Quads', 1)
-  gmsh.model.mesh.field.setNumber(extrudedBL, 'Thickness', mesh['extruded']['thickness'])
+  gmsh.model.mesh.field.setNumber(extrudedBL, 'Thickness', mesh['BL properties']['thickness'])
   gmsh.model.mesh.field.setAsBoundaryLayer(extrudedBL)
 
 gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)

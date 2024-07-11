@@ -2,7 +2,7 @@
   "name" : "spleen",
   "working directory" : "data/spleen/",
   "domain" : {
-    "thickness" : 160e-3,
+    "thickness" : 165e-3,
     "length of inlet"  : 50e-3,
     "length of outlet" : 50e-3
   },
@@ -37,9 +37,10 @@
       "diffuse": 3
     },
     "boundary layer" : false ,
-    "extruded" :  {
+    "BL properties" :  {
       "ratio" : 1.1,
       "thickness" : 5e-3,
+      "num points": 30,
       "size": 1e-5
     }
   },
