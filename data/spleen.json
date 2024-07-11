@@ -1,6 +1,6 @@
 { 
   "name" : "spleen",
-  "working directory" : "/home/terezie/documents/PhD/periodicBladeMesh/data/spleen/",
+  "working directory" : "data/spleen/",
   "domain" : {
     "thickness" : 160e-3,
     "length of inlet"  : 50e-3,
@@ -8,10 +8,10 @@
   },
   "geometry" : {
     "profile": {
-      "scaled by"                : false,
-      "delimiter"                : "\t",
-      "name of suction"          : "suction.csv",
-      "name of pressure"         : "pressure.csv"
+      "scaled by"        : false,
+      "delimiter"        : "\t",
+      "name of suction"  : "suction.csv",
+      "name of pressure" : "pressure.csv"
     },
     "inlet flow angle"     : 37.3000,
     "outlet flow angle"    : 53.8000,
@@ -25,14 +25,22 @@
   "mesh" : {
     "baseline size" : 1e-3,
     "min size"      : 1e-4,
-    "max size"      : 1e-2,
-    "n_layers_z"    : 20,
-    "periodicities internal match" : false,
-    "wake lenght"                  : 50e-3,
-    "boundary layer type" : "extruded",
+    "max size"      : 5e-3,
+    "n_layers_z"    : 1,
+    "periodicities internal match" : true,
+    "mesh size from curvature" : 1,
+    "refine wake": true,
+    "wake" : {
+      "length" : 30e-3,
+      "thickness" : 5e-3,
+      "size" : 5e-4,
+      "diffuse": 3
+    },
+    "boundary layer" : false ,
     "extruded" :  {
-      "growth ratio" : 1.1,
-      "thickness" : 2e-3
+      "ratio" : 1.1,
+      "thickness" : 5e-3,
+      "size": 1e-5
     }
   },
   "run GUI" : true,

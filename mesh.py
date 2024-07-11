@@ -46,9 +46,9 @@ gmsh.model.mesh.setOrder(1)
 
 numProfilePoints = np.size(coor_suction, axis=0)
 
-points_pressure = np.zeros(numProfilePoints)
-points_suction  = np.zeros(numProfilePoints)
-points_midline  = np.zeros(numProfilePoints+2)
+points_pressure = np.zeros(numProfilePoints  , dtype=int)
+points_suction  = np.zeros(numProfilePoints  , dtype=int)
+points_midline  = np.zeros(numProfilePoints+2, dtype=int)
 
 for i in range(numProfilePoints):
 
@@ -116,12 +116,81 @@ gmsh.model.addPhysicalGroup(2, [volume[7][1]], name = "blade_suction" )
 
 gmsh.model.addPhysicalGroup(3, [volume[1][1]], name = "fluid" )
 
+if mesh['periodicities internal match']:
+  translation = [1, 0, 0, 2*xLen_pitch, 
+                 0, 1, 0, 2*yLen_pitch, 
+                 0, 0, 1, 0, 
+                 0, 0, 0, 1]
+  gmsh.model.mesh.setPeriodic(2, [volume[3][1]], [volume[5][1]], translation)
+
+refinementFields  = []
+
+if mesh['refine wake']:
+  wake = mesh['wake']
+  xLen_wake = np.cos(np.deg2rad(-geometry['outlet flow angle']))*wake['length']
+  yLen_wake = np.sin(np.deg2rad(-geometry['outlet flow angle']))*wake['length']
+  point_wake = gmsh.model.occ.addPoint(
+    (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_wake, 
+    (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_wake,
+    0
+    )
+
+  line_wake = gmsh.model.occ.add_line(points_midline[-2], point_wake)
+  gmsh.model.geo.synchronize()
+  gmsh.model.occ.synchronize()
+
+  gmsh.model.mesh.field.add("Distance", 1)
+  gmsh.model.mesh.field.setNumbers(1, "CurvesList", [line_wake])
+  gmsh.model.mesh.field.setNumber(1, "Sampling", 100)
+  
+  gmsh.model.mesh.field.add("Threshold", 2)
+  gmsh.model.mesh.field.setNumber(2, "InField", 1)
+  gmsh.model.mesh.field.setNumber(2, "SizeMin", wake['size'])
+  gmsh.model.mesh.field.setNumber(2, "SizeMax", mesh['max size'])
+  gmsh.model.mesh.field.setNumber(2, "DistMin", wake['thickness'])
+  gmsh.model.mesh.field.setNumber(2, "DistMax", wake['diffuse']*wake['thickness'])
+
+  refinementFields = [2]
+
+gmsh.model.mesh.field.add("Distance", 3)
+gmsh.model.mesh.field.setNumbers(3, "CurvesList", [line_suction, line_pressure])
+gmsh.model.mesh.field.setNumber(3, "Sampling", 100)
+  
+gmsh.model.mesh.field.add("Threshold", 4)
+gmsh.model.mesh.field.setNumber(4, "InField", 3)
+gmsh.model.mesh.field.setNumber(4, "SizeMin", mesh['baseline size'])
+gmsh.model.mesh.field.setNumber(4, "SizeMax", mesh['max size'])
+gmsh.model.mesh.field.setNumber(4, "DistMin", geometry['pitch']/4)
+gmsh.model.mesh.field.setNumber(4, "DistMax", geometry['pitch']/2)
+
+refinementFields = np.append(refinementFields, 4)
+
+gmsh.model.mesh.field.add("Min", 7)
+gmsh.model.mesh.field.setNumbers(7, "FieldsList", refinementFields)
+gmsh.model.mesh.field.setAsBackgroundMesh(7)
+
+if mesh['boundary layer'] == 'extruded':
+
+  extrudedBL = gmsh.model.mesh.field.add('BoundaryLayer')
+  gmsh.model.mesh.field.setNumbers(extrudedBL, 'CurvesList', [line_suction, line_pressure])
+  gmsh.model.mesh.field.setNumber(extrudedBL, 'Size', mesh['extruded']['size']) 
+  gmsh.model.mesh.field.setNumber(extrudedBL, 'Ratio', mesh['extruded']['ratio']) 
+  gmsh.model.mesh.field.setNumber(extrudedBL, 'Quads', 1)
+  gmsh.model.mesh.field.setNumber(extrudedBL, 'Thickness', mesh['extruded']['thickness'])
+  gmsh.model.mesh.field.setAsBoundaryLayer(extrudedBL)
+
+gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", mesh['mesh size from curvature'])
+gmsh.option.setNumber('Mesh.BoundaryLayerFanElements', 0)
+
 gmsh.option.setNumber("Mesh.CharacteristicLengthMax", mesh["max size"] )
 gmsh.option.setNumber("Mesh.CharacteristicLengthMin", mesh["min size"]  )
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
+
+gmsh.model.mesh.generate(3)
 
 gmsh.model.geo.synchronize()
 gmsh.model.occ.synchronize()
 if f['save']:    gmsh.write(f['working directory']+f['name']+f['format'])
 if f['run GUI']: gmsh.fltk.run()
-
