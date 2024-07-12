@@ -2,7 +2,7 @@
   "name" : "spleen",
   "working directory" : "data/spleen/",
   "domain" : {
-    "thickness" : 165e-3,
+    "thickness" : 20e-3,
     "length of inlet"  : 50e-3,
     "length of outlet" : 50e-3
   },
@@ -27,23 +27,25 @@
     "min size"      : 1e-4,
     "max size"      : 5e-3,
     "n_layers_z"    : 1,
-    "periodicities internal match" : true,
-    "mesh size from curvature" : 1,
-    "refine wake": true,
+    "periodicities internal match" : false,
+    "mesh size from curvature" : 50,
+    "refine wake": false,
     "wake" : {
       "length" : 30e-3,
       "thickness" : 5e-3,
       "size" : 5e-4,
       "diffuse": 3
     },
-    "boundary layer" : false ,
+    "boundary layer" : "transfinite",
     "BL properties" :  {
+      "cells on blade" : 50,
       "ratio" : 1.1,
-      "thickness" : 5e-3,
+      "thickness" : 3e-3,
       "num points": 30,
       "size": 1e-5
     }
   },
+  "create mesh": true,
   "run GUI" : true,
   "save"    : false,
   "format"  : ".msh"
