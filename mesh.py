@@ -101,6 +101,8 @@ line_outlet = gmsh.model.occ.add_line(points_lowerPeriodicity[-1][1], points_upp
 
 loop_outer = gmsh.model.occ.add_curve_loop([line_inlet, line_upperPeriodicity[0][1], -line_outlet, -line_lowerPeriodicity[0][1]])
 
+gmsh.option.setNumber("Mesh.Algorithm", 8) 
+
 if mesh['boundary layer'] != 'transfinite':
 
   loop_blade = gmsh.model.occ.add_curve_loop([line_pressure, -line_suction])
@@ -161,13 +163,14 @@ else:
 
   gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
 
-  for curve in [line_pressure, line_pressureInflated, line_suction, line_suctionInflated]:
-    gmsh.model.mesh.setTransfiniteCurve(curve, blProperties['cells on blade'])
+  for curve in [line_pressure, line_suction]:
+    gmsh.model.mesh.setTransfiniteCurve(curve, blProperties['cells on blade'], 'Bump', coef=1/blProperties['refinement of edges'])
 
-  gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
+  for curve in [line_pressureInflated, line_suctionInflated]:
+    gmsh.model.mesh.setTransfiniteCurve(curve, blProperties['cells on blade'], 'Bump', coef=1/blProperties['refinement of inflated edges'])
 
   for curve in [line_midlineInflated_i, line_midlineInflated_o]:
-    gmsh.model.mesh.setTransfiniteCurve(curve, blProperties['num points'])
+    gmsh.model.mesh.setTransfiniteCurve(curve, blProperties['num points'], coef=blProperties['ratio'])
 
   gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
 
@@ -176,8 +179,8 @@ else:
                                                                points_pressure[-1],
                                                                points_pressureInflated[-1], 
                                                                points_pressureInflated[0]])
-    #gmsh.model.mesh.setRecombine(2, surface)
-    #gmsh.model.mesh.setSmoothing(2, surface, 5)
+    gmsh.model.mesh.setRecombine(2, surface)
+    gmsh.model.mesh.setSmoothing(2, surface, 5)
     
   gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
   volume = gmsh.model.occ.extrude([(2,surf) for surf in [surface_outer, surface_pressure, surface_suction] ], 
@@ -197,12 +200,15 @@ else:
 
   gmsh.model.addPhysicalGroup(3, [ent[1] for ent in  gmsh.model.getEntities(3)], name = "fluid" )
 
+  surface_periodicity_suction  = volume[3][1]
+  surface_periodicity_pressure = volume[5][1]
+
 if mesh['periodicities internal match']:
-  translation = [1, 0, 0, 2*xLen_pitch, 
-                 0, 1, 0, 2*yLen_pitch, 
+  translation = [1, 0, 0, -2*xLen_pitch, 
+                 0, 1, 0, -2*yLen_pitch, 
                  0, 0, 1, 0, 
                  0, 0, 0, 1]
-  gmsh.model.mesh.setPeriodic(2, [surface_periodicity_suction], [surface_periodicity_pressure], translation)
+  gmsh.model.mesh.setPeriodic(2, [surface_periodicity_pressure], [surface_periodicity_suction], translation)
 
 refinementFields  = []
 
@@ -241,13 +247,39 @@ gmsh.model.mesh.field.setNumber(4, "InField", 3)
 gmsh.model.mesh.field.setNumber(4, "SizeMin", mesh['baseline size'])
 gmsh.model.mesh.field.setNumber(4, "SizeMax", mesh['max size'])
 gmsh.model.mesh.field.setNumber(4, "DistMin", geometry['pitch']/4)
-gmsh.model.mesh.field.setNumber(4, "DistMax", geometry['pitch']/2)
+gmsh.model.mesh.field.setNumber(4, "DistMax", geometry['pitch'])
 
 refinementFields = np.append(refinementFields, 4)
 
-gmsh.model.mesh.field.add("Min", 7)
-gmsh.model.mesh.field.setNumbers(7, "FieldsList", refinementFields)
-gmsh.model.mesh.field.setAsBackgroundMesh(7)
+if mesh['refine LE']:
+  gmsh.model.mesh.field.add("Distance", 5)
+  gmsh.model.mesh.field.setNumbers(5, "PointsList", [points_pressure[0]])
+    
+  gmsh.model.mesh.field.add("Threshold", 6)
+  gmsh.model.mesh.field.setNumber(6, "InField", 5)
+  gmsh.model.mesh.field.setNumber(6, "SizeMin", mesh['LE']['size'])
+  gmsh.model.mesh.field.setNumber(6, "SizeMax", mesh['max size'])
+  gmsh.model.mesh.field.setNumber(6, "DistMin", mesh['LE']['radius'])
+  gmsh.model.mesh.field.setNumber(6, "DistMax", mesh['LE']['radius']*mesh['LE']['diffuse'])
+
+  refinementFields = np.append(refinementFields, 6)
+
+if mesh['refine TE']:
+  gmsh.model.mesh.field.add("Distance", 7)
+  gmsh.model.mesh.field.setNumbers(7, "PointsList", [points_pressure[-1]])
+    
+  gmsh.model.mesh.field.add("Threshold", 8)
+  gmsh.model.mesh.field.setNumber(8, "InField", 7)
+  gmsh.model.mesh.field.setNumber(8, "SizeMin", mesh['TE']['size'])
+  gmsh.model.mesh.field.setNumber(8, "SizeMax", mesh['max size'])
+  gmsh.model.mesh.field.setNumber(8, "DistMin", mesh['TE']['radius'])
+  gmsh.model.mesh.field.setNumber(8, "DistMax", mesh['TE']['radius']*mesh['TE']['diffuse'])
+
+  refinementFields = np.append(refinementFields, 8)
+
+gmsh.model.mesh.field.add("Min", 100)
+gmsh.model.mesh.field.setNumbers(100, "FieldsList", refinementFields)
+gmsh.model.mesh.field.setAsBackgroundMesh(100)
 
 if mesh['boundary layer'] == 'extruded':
 

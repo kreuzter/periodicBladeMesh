@@ -2,7 +2,7 @@
   "name" : "spleen",
   "working directory" : "data/spleen/",
   "domain" : {
-    "thickness" : 20e-3,
+    "thickness"        : 20e-3,
     "length of inlet"  : 50e-3,
     "length of outlet" : 50e-3
   },
@@ -16,37 +16,44 @@
     "inlet flow angle"     : 37.3000,
     "outlet flow angle"    : 53.8000,
     "stagger angle"        : 24.4000,
-    "pitch-to-chord"       : 0.6302,
-    "axial chord"          : 47.6144e-3,
     "true chord"           : 52.2850e-3,
-    "pitch"                : 32.9507e-3,
-    "trailing edge radius" : 0.4350e-3
+    "pitch"                : 32.9507e-3
   },
   "mesh" : {
-    "baseline size" : 1e-3,
-    "min size"      : 1e-4,
-    "max size"      : 5e-3,
+    "baseline size" : 5e-4,
+    "min size"      : 1e-5,
+    "max size"      : 2e-3,
     "n_layers_z"    : 1,
     "periodicities internal match" : false,
     "mesh size from curvature" : 50,
-    "refine wake": false,
+    "refine LE": true,
+    "LE" : {
+      "radius" : 1e-3,
+      "size" : 1e-4,
+      "diffuse": 2
+    },
+    "refine TE": true,
+    "TE" : {
+      "radius" : 1e-3,
+      "size" : 1e-4,
+      "diffuse": 2
+    },
+    "refine wake": true,
     "wake" : {
-      "length" : 30e-3,
+      "length" : 100e-3,
       "thickness" : 5e-3,
       "size" : 5e-4,
       "diffuse": 3
     },
-    "boundary layer" : "transfinite",
+    "boundary layer" : "extruded",
     "BL properties" :  {
-      "cells on blade" : 50,
-      "ratio" : 1.1,
+      "ratio"     : 1.1,
       "thickness" : 3e-3,
-      "num points": 30,
-      "size": 1e-5
+      "size"      : 1e-5
     }
   },
   "create mesh": true,
   "run GUI" : true,
-  "save"    : false,
+  "save"    : true,
   "format"  : ".msh"
 }
