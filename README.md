@@ -5,7 +5,7 @@ All parameters of the geometry and mesh can be defined in json file, theoretical
 
 Internal references can be used in json files. E.g.:
 ```
-  "scaled by"  : {"$ref": "#/geometry/true chord"},
+ "scaled by"  : {"$ref": "#/geometry/true chord"},
 ```
 
 json files cannot handle mathematics. Following will **not** work:
@@ -13,7 +13,7 @@ json files cannot handle mathematics. Following will **not** work:
 <strike>
 
 ```
-   "length of inlet"  : 3*{"$ref": "#/geometry/true chord"},
+ "length of inlet"  : 3*{"$ref": "#/geometry/true chord"}, 
 ```
 
 </strike>
