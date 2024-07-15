@@ -8,6 +8,16 @@ Internal references can be used in json files. E.g.:
   "scaled by"  : {"$ref": "#/geometry/true chord"},
 ```
 
+json files cannot handle mathematics. Following will **not** work:
+
+<strike>
+
+```
+   "length of inlet"  : 3*{"$ref": "#/geometry/true chord"},
+```
+
+</strike>
+
 ## Predefined refinements 
 
 - `baseline size` is applied on the surface of the blade
