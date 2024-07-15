@@ -64,6 +64,9 @@ for i in range(numProfilePoints):
 
 for i in [0, -1]:
   points_suction[i] = points_pressure[i]
+
+points_midline[1] = points_pressure[0]
+points_midline[-2] = points_pressure[-1]
   
 xLen_inlet, yLen_inlet = lengths(geometry['inlet flow angle'],domain['length of inlet'])
 
@@ -84,7 +87,7 @@ line_midline = gmsh.model.occ.add_bspline(points_midline)
 line_suction = gmsh.model.occ.add_bspline(points_suction)
 line_pressure = gmsh.model.occ.add_bspline(points_pressure)
 
-yLen_pitch, xLen_pitch = lengths(geometry['stagger angle'], geometry['pitch']/2)
+yLen_pitch, xLen_pitch = lengths(geometry['stagger angle']*(not profile['stagger included in definition']), geometry['pitch']/2)
 
 line_upperPeriodicity = gmsh.model.occ.copy([(1, line_midline)])
 points_upperPeriodicity = gmsh.model.occ.copy([(0, points_midline[0]), (0, points_midline[-1])])
@@ -101,7 +104,7 @@ line_outlet = gmsh.model.occ.add_line(points_lowerPeriodicity[-1][1], points_upp
 
 loop_outer = gmsh.model.occ.add_curve_loop([line_inlet, line_upperPeriodicity[0][1], -line_outlet, -line_lowerPeriodicity[0][1]])
 
-gmsh.option.setNumber("Mesh.Algorithm", 8) 
+#gmsh.option.setNumber("Mesh.Algorithm", 8) 
 
 if mesh['boundary layer'] != 'transfinite':
 
@@ -204,11 +207,11 @@ else:
   surface_periodicity_pressure = volume[5][1]
 
 if mesh['periodicities internal match']:
-  translation = [1, 0, 0, -2*xLen_pitch, 
-                 0, 1, 0, -2*yLen_pitch, 
+  translation = [1, 0, 0, 2*xLen_pitch, 
+                 0, 1, 0, 2*yLen_pitch, 
                  0, 0, 1, 0, 
                  0, 0, 0, 1]
-  gmsh.model.mesh.setPeriodic(2, [surface_periodicity_pressure], [surface_periodicity_suction], translation)
+  gmsh.model.mesh.setPeriodic(2, [surface_periodicity_suction], [surface_periodicity_pressure], translation)
 
 refinementFields  = []
 
