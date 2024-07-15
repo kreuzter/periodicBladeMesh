@@ -26,18 +26,18 @@
     "max size"      : 2e-3,
     "n_layers_z"    : 1,
     "periodicities internal match" : true,
-    "mesh size from curvature" : 10,
+    "mesh size from curvature" : 1,
     "refine LE": true,
     "LE" : {
       "radius" : 1e-3,
       "size" : 1e-4,
-      "diffuse": 2
+      "diffuse": 10
     },
     "refine TE": true,
     "TE" : {
-      "radius" : 1e-3,
-      "size" : 1e-4,
-      "diffuse": 2
+      "radius" : 0.4e-3,
+      "size" : 0.5e-4,
+      "diffuse": 10
     },
     "refine wake": true,
     "wake" : {
