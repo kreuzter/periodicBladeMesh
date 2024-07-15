@@ -54,6 +54,6 @@
   },
   "create mesh": true,
   "run GUI" : true,
-  "save"    : true,
+  "save"    : false,
   "format"  : ".msh"
 }
