@@ -3,7 +3,7 @@
   "working directory" : "data/spleen/",
   "create mesh": true,
   "run GUI"    : true,
-  "save"       : true,
+  "save"       : false,
   "format"     : ".msh",
   "version"    : 2.2,
   "domain" : {
@@ -26,10 +26,10 @@
     "pitch"                : 32.9507e-3
   },
   "mesh" : {
-    "baseline size" : 5e-4,
+    "baseline size" : 1e-3,
     "min size"      : 1e-5,
-    "max size"      : 2e-3,
-    "n_layers_z"    : 1,
+    "max size"      : 5e-3,
+    "n layers in z" : 150,
     "periodicities internal match" : false,
     "mesh size from curvature" : 1,
     "refine LE": true,
@@ -56,6 +56,12 @@
       "ratio"     : 1.1,
       "thickness" : 3e-3,
       "size"      : 1e-5
+    },
+    "side walls boundary layer" : true,
+    "SW BL properties": {
+      "ratio"     : 1.1,
+      "size last" : 1e-3,
+      "size first": 1e-5
     }
   }
 }

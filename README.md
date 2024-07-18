@@ -29,7 +29,7 @@ json files cannot handle mathematics. Following will **not** work:
 ## Refinements 
 
 - `baseline size` is applied on the **surface of the blade**
-- `mesh size from curvature` is quite a tricky parameter. It could take care of the edges 
+- `mesh size from curvature` (number of nodes on 2 $\pi$ arc) is quite a tricky parameter. It could take care of the edges 
 and there would be no need for tuning of parameters of their refinement.
 But this parameter also refines the periodicities, which can lead to lower quality of mesh.
 Use it carefully.
@@ -60,7 +60,7 @@ Example of refinement setup in a json file:
 
 ## Boundary layer meshing
 
-Two setups of boundary layer are available:
+Two setups of boundary layer **on the surface of the blade** are available:
   - extruded BL (preferred, gmsh internal tool)
   - transfinite mesh around blade (useless without manual tuning)
 
@@ -76,6 +76,24 @@ For the **transfinite** one:
 
 To translate between number of cells and size of first layer 
 [online calculators](https://caefn.com/calculator/boundary-layer-mesh) can be used.
+
+### Side walls boundary layer
+
+In specific cases a periodic mesh created with this tool can be used for 3D calculations. In such cases it might be useful to refine the mesh in the vicinity of the side walls.
+
+Parameters for 3D setup are:
+
+```json
+"n layers in z"             : 100,
+"side walls boundary layer" : true,
+"SW BL properties"          :  {
+  "ratio"     : 1.1,
+  "size last" : 3e-3,
+  "size first": 1e-5
+}
+```
+
+For 2D cases set `"n layers in z" : 1`, other parameters are then not taken into account.
 
 ## Test cases:
 
