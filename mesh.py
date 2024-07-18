@@ -113,7 +113,6 @@ loop_outer = gmsh.model.occ.add_curve_loop([
   ])
 
 extrude_z, extrude_num, extrude_heights = aux.getExtrusionParameters(f)
-import matplotlib.pyplot as plt; plt.plot(extrude_heights); plt.show()
 
 if mesh['boundary layer'] != 'transfinite':
 

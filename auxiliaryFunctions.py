@@ -75,6 +75,24 @@ def interpolate(coor_suction, coor_pressure):
 
   return coor_suction, coor_pressure
 
+def elementSize(f):
+  domain = f['domain']
+  mesh = f['mesh']
+  iterator = 0
+  arr = [mesh["SW BL properties"]["size first"]]
+
+  while np.sum(arr) <= domain['thickness']/2:
+    arr = np.append(
+      arr, 
+      np.min([
+        mesh["SW BL properties"]["size first"]*mesh["SW BL properties"]['ratio']**iterator, 
+        mesh["SW BL properties"]["size last"]
+        ])
+      )
+    iterator +=1
+  
+  return arr
+
 def getExtrusionParameters(f):
   domain = f['domain']
   mesh = f['mesh']
@@ -91,38 +109,15 @@ def getExtrusionParameters(f):
       extrude_heights = []
 
     else:
-      extrude_num = np.ones(mesh['n layers in z'])
-  
-      extrude_field = [
-        mesh["SW BL properties"]["size first"], 
-        mesh["SW BL properties"]["size first"]*(1+mesh["SW BL properties"]["ratio"])
-        ]
-  
-      while np.abs(extrude_field[-1] - extrude_field[-2]) < mesh["SW BL properties"]["size last"]:
-        extrude_field = np.append(
-          extrude_field, 
-          extrude_field[-1]+np.abs(extrude_field[-1]-extrude_field[-2])*mesh["SW BL properties"]["ratio"]
-          )
-      if len(extrude_field) > mesh['n layers in z']/2:
-        extrude_field = np.delete(
-          extrude_field, 
-          range(int(len(extrude_field) - mesh['n layers in z']/2), len(extrude_field))
-          )
-      else:
-        while len(extrude_field) < mesh['n layers in z']/2:
-          extrude_field = np.append(
-            extrude_field,
-            extrude_field[-1] + mesh["SW BL properties"]["size last"])
-          
-      extrude_field2 = np.zeros(len(extrude_field))
-      extrude_field2[0] = extrude_field[-1] + np.abs(extrude_field[-1] - extrude_field[-2] )
-      for i in range(1,len(extrude_field)-1):
-        extrude_field2[i] = extrude_field2[i-1] + np.abs(extrude_field[-(i+1)] - extrude_field[-(i+2)])
-      extrude_field2[-1] = extrude_field2[-2] + mesh["SW BL properties"]["size first"]
-      extrude_field3 = np.append(extrude_field, extrude_field2)
-      
-      print(extrude_field3[-1])
-      extrude_heights = [extrude_field3[i]/extrude_field3[-1] for i in range(len(extrude_field3))]
+      extrude_size = elementSize(f)
+      extrude_num = np.ones(len(extrude_size)*2)
+      print(f'Number of cells in z is {len(extrude_size)*2}.')
+      extrude_size = np.append(extrude_size, np.flip(extrude_size))
+      extrude_heights = np.ones(len(extrude_size))
+      extrude_heights[0] = mesh["SW BL properties"]["size first"]
+      for i in range(1, len(extrude_heights)):
+        extrude_heights[i] = extrude_heights[i-1]+extrude_size[i]
+      extrude_heights = extrude_heights/extrude_heights[-1]
   return extrude_z, extrude_num, extrude_heights
 
 if __name__ == "__main__":

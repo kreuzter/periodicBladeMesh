@@ -17,6 +17,8 @@
       "delimiter"        : "\t",
       "name of suction"  : "suction.csv",
       "name of pressure" : "pressure.csv",
+      "reverse suction"   : false,
+      "reverse pressure"  : false,
       "stagger included in definition" : true
     },
     "inlet flow angle"     : 37.3000,
@@ -29,9 +31,9 @@
     "baseline size" : 1e-3,
     "min size"      : 1e-5,
     "max size"      : 5e-3,
-    "n layers in z" : 150,
+    "n layers in z" : 1,
     "periodicities internal match" : false,
-    "mesh size from curvature" : 1,
+    "mesh size from curvature" : 0,
     "refine LE": true,
     "LE" : {
       "radius" : 1e-3,

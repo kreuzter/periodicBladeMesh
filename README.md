@@ -1,5 +1,5 @@
 # periodicBladeMesh
-(py)gmsh based tool for the simpliest turbomachinery mesh
+(py)gmsh based tool for the simplest turbomachinery mesh
 
 All parameters of the geometry and mesh can be defined in json file, theoretically, there
 is no need to touch the python code. Practically, the code is definitely missing something, 
@@ -14,13 +14,14 @@ json files cannot handle mathematics. Following will **not** work:
 
 <strike>
 
-```json
+```
  "length of inlet"  : 3*{"$ref": "#/geometry/true chord"}, 
 ```
 
 </strike>
 
-`.msh` files are widely accepted for mesh definition but quite often only ASCII version of file in 2.2 can be read. If this is your case, use: 
+`.msh` files are widely accepted for mesh definition but quite often only ASCII version of 
+file in 2.2 can be read. If this is your case, use: 
 
 ```json
  "version"    : 2.2,
@@ -29,10 +30,10 @@ json files cannot handle mathematics. Following will **not** work:
 ## Refinements 
 
 - `baseline size` is applied on the **surface of the blade**
-- `mesh size from curvature` (number of nodes on 2 $\pi$ arc) is quite a tricky parameter. It could take care of the edges 
-and there would be no need for tuning of parameters of their refinement.
-But this parameter also refines the periodicities, which can lead to lower quality of mesh.
-Use it carefully.
+- `mesh size from curvature` (number of nodes on 2 $\pi$ arc) is quite a tricky parameter. 
+It could take care of the edges and there would be no need for tuning of parameters of 
+their refinement. But this parameter also refines the periodicities, which can lead to 
+lower quality of mesh. Use it carefully.
 - if more refinements are affecting a region (e.g. on trailing edge refinement of itself, 
 blade surface and wake take place), minimum required cell size is taken into account
 
@@ -79,7 +80,8 @@ To translate between number of cells and size of first layer
 
 ### Side walls boundary layer
 
-In specific cases a periodic mesh created with this tool can be used for 3D calculations. In such cases it might be useful to refine the mesh in the vicinity of the side walls.
+In specific cases a periodic mesh created with this tool can be used for 3D calculations. 
+In such cases it might be useful to refine the mesh in the vicinity of the side walls.
 
 Parameters for 3D setup are:
 
@@ -94,6 +96,9 @@ Parameters for 3D setup are:
 ```
 
 For 2D cases set `"n layers in z" : 1`, other parameters are then not taken into account.
+
+It should be noted, that if in current implementation `n layers in z` is ignored when 
+meshing side walls. Number of cells in z direction is reported. 
 
 ## Test cases:
 

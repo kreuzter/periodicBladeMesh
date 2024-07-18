@@ -1,5 +1,5 @@
 *.stl
 *.msh
 *.geo
-
+*.gmsh
 __pycache__/
