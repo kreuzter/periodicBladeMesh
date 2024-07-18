@@ -24,12 +24,18 @@ points_midline  = np.zeros(numProfilePoints+2, dtype=int)
 
 for i in range(numProfilePoints):
 
-  points_pressure[i] = gmsh.model.occ.addPoint(coor_pressure[i, 0], coor_pressure[i, 1], 0)
-  points_suction[i]  = gmsh.model.occ.addPoint( coor_suction[i, 0],  coor_suction[i, 1], 0)
+  points_pressure[i] = gmsh.model.occ.addPoint(
+    coor_pressure[i, 0], 
+    coor_pressure[i, 1],
+    -domain['thickness']/2)
+  points_suction[i]  = gmsh.model.occ.addPoint(
+    coor_suction[i, 0], 
+    coor_suction[i, 1],
+    -domain['thickness']/2)
   points_midline[i+1]  = gmsh.model.occ.addPoint(
     (coor_pressure[ i, 0 ]+coor_suction[ i, 0 ])/2, 
     (coor_pressure[ i, 1 ]+coor_suction[ i, 1 ])/2,
-    0
+    -domain['thickness']/2
     )
 
 for i in [0, -1]:
@@ -46,7 +52,7 @@ xLen_inlet, yLen_inlet = aux.lengths(
 points_midline[0] =   gmsh.model.occ.addPoint(
     (coor_pressure[ 0, 0 ]+coor_suction[ 0, 0 ])/2 - xLen_inlet, 
     (coor_pressure[ 0, 1 ]+coor_suction[ 0, 1 ])/2 - yLen_inlet,
-    0
+    -domain['thickness']/2
     )
 
 xLen_outlet, yLen_outlet = aux.lengths(
@@ -56,7 +62,7 @@ xLen_outlet, yLen_outlet = aux.lengths(
 points_midline[-1] =   gmsh.model.occ.addPoint(
     (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_outlet, 
     (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_outlet,
-    0
+    -domain['thickness']/2
     )
 
 line_midline = gmsh.model.occ.add_bspline(points_midline)
@@ -106,49 +112,8 @@ loop_outer = gmsh.model.occ.add_curve_loop([
   -line_lowerPeriodicity[0][1]
   ])
 
-# parameters for extrusion
-
-extrude_z = domain['thickness']
-if mesh['n layers in z'] == 1:
-  extrude_num = [1]
-  extrude_heights = []
-
-else:
-  if not mesh['side walls boundary layer']:
-    extrude_num = [mesh['n layers in z']]
-    extrude_heights = []
-  else:
-    extrude_num = np.ones(mesh['n layers in z'])
-
-    extrude_field = [
-      mesh["SW BL properties"]["size first"], 
-      mesh["SW BL properties"]["size first"]*(1+mesh["SW BL properties"]["ratio"])
-      ]
-
-    while np.abs(extrude_field[-1] - extrude_field[-2]) < mesh["SW BL properties"]["size last"]:
-      extrude_field = np.append(
-        extrude_field, 
-        extrude_field[-1]+np.abs(extrude_field[-1]-extrude_field[-2])*mesh["SW BL properties"]["ratio"]
-        )
-    if len(extrude_field) > mesh['n layers in z']/2:
-      extrude_field = np.delete(
-        extrude_field, 
-        range(int(len(extrude_field) - mesh['n layers in z']/2), len(extrude_field))
-        )
-    else:
-      while len(extrude_field) < mesh['n layers in z']/2:
-        extrude_field = np.append(
-          extrude_field,
-          extrude_field[-1] + mesh["SW BL properties"]["size last"])
-        
-    extrude_field2 = np.zeros(len(extrude_field))
-    extrude_field2[0] = extrude_field[-1] + np.abs(extrude_field[-1] - extrude_field[-2] )
-    for i in range(1,len(extrude_field)-1):
-      extrude_field2[i] = extrude_field2[i-1] + np.abs(extrude_field[-(i+1)] - extrude_field[-(i+2)])
-    extrude_field2[-1] = extrude_field2[-2] + mesh["SW BL properties"]["size first"]
-    extrude_field3 = np.append(extrude_field, extrude_field2)
-    
-    extrude_heights = [extrude_field3[i]/extrude_field3[-1] for i in range(len(extrude_field3))]
+extrude_z, extrude_num, extrude_heights = aux.getExtrusionParameters(f)
+import matplotlib.pyplot as plt; plt.plot(extrude_heights); plt.show()
 
 if mesh['boundary layer'] != 'transfinite':
 
@@ -192,12 +157,12 @@ else:
     points_pressureInflated[i] = gmsh.model.occ.addPoint(
       coor_pressureInflated[ i, 0 ], 
       coor_pressureInflated[ i, 1 ], 
-      0
+      -domain['thickness']/2
       )
     points_suctionInflated[i]  = gmsh.model.occ.addPoint( 
       coor_suctionInflated[ i, 0 ],  
       coor_suctionInflated[ i, 1 ], 
-      0
+      -domain['thickness']/2
       )
 
   for i in [0,-1]:
@@ -309,7 +274,7 @@ if mesh['refine wake']:
   point_wake = gmsh.model.occ.addPoint(
     (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_wake, 
     (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_wake,
-    0
+    -domain['thickness']/2
     )
 
   line_wake = gmsh.model.occ.add_line(points_midline[-2], point_wake)
