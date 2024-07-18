@@ -6,7 +6,7 @@ is no need to touch the python code. Practically, the code is definitely missing
 but it might be a good starting point.
 
 Internal references can be used in json files. E.g.:
-```
+```json
  "scaled by"  : {"$ref": "#/geometry/true chord"},
 ```
 
@@ -14,11 +14,17 @@ json files cannot handle mathematics. Following will **not** work:
 
 <strike>
 
-```
+```json
  "length of inlet"  : 3*{"$ref": "#/geometry/true chord"}, 
 ```
 
 </strike>
+
+`.msh` files are widely accepted for mesh definition but quite often only ASCII version of file in 2.2 can be read. If this is your case, use: 
+
+```json
+ "version"    : 2.2,
+```
 
 ## Refinements 
 
@@ -41,7 +47,7 @@ the mesh is not affected by given refinement
 
 Example of refinement setup in a json file:
 
-```
+```json
 "refine TE": true,   | region around trailing edge will be refined 
 "TE" : {
   "size"   : 1e-4,   | cells in the closest region will have size 1e-4 m
@@ -76,6 +82,6 @@ To translate between number of cells and size of first layer
 ### [SPLEEN](https://doi.org/10.5281/zenodo.7264761) turbine blade
 
 run with 
-```
+```bash
   python3 mesh.py data/spleen.json
 ```

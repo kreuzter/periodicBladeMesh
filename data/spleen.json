@@ -1,8 +1,13 @@
 { 
   "name" : "spleen",
   "working directory" : "data/spleen/",
+  "create mesh": true,
+  "run GUI"    : true,
+  "save"       : true,
+  "format"     : ".msh",
+  "version"    : 2.2,
   "domain" : {
-    "thickness"        : 20e-3,
+    "thickness"        : 165e-3,
     "length of inlet"  : 50e-3,
     "length of outlet" : 50e-3
   },
@@ -25,7 +30,7 @@
     "min size"      : 1e-5,
     "max size"      : 2e-3,
     "n_layers_z"    : 1,
-    "periodicities internal match" : true,
+    "periodicities internal match" : false,
     "mesh size from curvature" : 1,
     "refine LE": true,
     "LE" : {
@@ -52,9 +57,5 @@
       "thickness" : 3e-3,
       "size"      : 1e-5
     }
-  },
-  "create mesh": true,
-  "run GUI" : true,
-  "save"    : false,
-  "format"  : ".msh"
+  }
 }

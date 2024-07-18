@@ -335,7 +335,6 @@ if mesh['boundary layer'] == 'extruded':
   gmsh.model.mesh.field.setNumber(extrudedBL, 'Ratio', mesh['BL properties']['ratio']) 
   gmsh.model.mesh.field.setNumber(extrudedBL, 'Quads', 1)
   gmsh.model.mesh.field.setNumber(extrudedBL, 'Thickness', mesh['BL properties']['thickness'])
-  gmsh.option.setNumber('Mesh.BoundaryLayerFanElements', 10)
   gmsh.model.mesh.field.setAsBoundaryLayer(extrudedBL)
 
 gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
@@ -347,7 +346,7 @@ gmsh.option.setNumber("Mesh.CharacteristicLengthMin", mesh["min size"]  )
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
 
 if f['create mesh']: gmsh.model.mesh.generate(3)
-
+if f['version']:     gmsh.option.setNumber("Mesh.MshFileVersion",f['version'])   
 gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
 
 if f['save']:    gmsh.write(f['working directory']+f['name']+f['format'])
