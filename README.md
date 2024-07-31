@@ -116,3 +116,10 @@ run with
 ```bash
   python3 mesh.py data/spleen.json
 ```
+
+### [schreiber84](https://doi.org/10.1115/1.3239561) compressor blade
+
+run with 
+```bash
+  python3 mesh.py data/schreiber84.json
+```
