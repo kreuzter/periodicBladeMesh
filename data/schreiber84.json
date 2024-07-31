@@ -1,0 +1,54 @@
+{ 
+  "name" : "schreiber84",
+  "working directory" : "data/schreiber84/",
+  "create mesh": true,
+  "run GUI"    : true,
+  "save"       : false,
+  "format"     : ".msh",
+  "domain" : {
+    "thickness"        : 165e-3,
+    "length of inlet"  : 100e-3,
+    "length of outlet" : 120e-3
+  },
+  "geometry" : {
+    "profile": {
+      "scaled by"        : {"$ref": "#/geometry/true chord"},
+      "delimiter"        : ";",
+      "name of suction"  : "suction.csv",
+      "name of pressure" : "pressure.csv"
+    },
+    "inlet flow angle"     : 9.99,
+    "outlet flow angle"    : 357.99,
+    "stagger angle"        : 41.49,
+    "true chord"           : 0.09,
+    "pitch"                : 0.05589
+  },
+  "mesh" : {
+    "baseline size" : 0.5e-3,
+    "min size"      : 1e-5,
+    "max size"      : 3e-3,
+    "n layers in z" : 1,
+    "mesh size from curvature" : 30,
+    "refine LE": true,
+    "LE" : {
+      "radius" : 0.1e-3,
+      "size"   : 0.5e-4,
+      "diffuse": 1.1
+    },
+    "refine TE": true,
+    "TE" : {"$ref": "#/mesh/LE"},
+    "refine wake": true,
+    "wake" : {
+      "length" :   200e-3,
+      "thickness" :  5e-3,
+      "size" :       5e-4,
+      "diffuse": 10
+    },
+    "boundary layer" : "extruded",
+    "BL properties" :  {
+      "ratio"     : 1.07,
+      "thickness" : 5e-3,
+      "size"      : 1e-5
+    }
+  }
+}
