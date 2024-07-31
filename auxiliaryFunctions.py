@@ -15,6 +15,7 @@ def initialize():
 
   featuresFile = open(args.path)
   f = json.load(featuresFile)
+  
   return f
 
 def loadProfile(features):
@@ -23,9 +24,12 @@ def loadProfile(features):
                                 delimiter=profile['delimiter'])
   coor_pressure = np.genfromtxt(features['working directory']+profile['name of pressure'], 
                                 delimiter=profile['delimiter'])
-  if profile['reverse suction']: coor_suction = np.flip(coor_suction, axis=0)
-  if profile['reverse pressure']: coor_pressure = np.flip(coor_pressure, axis=0)
-  if profile['scaled by']:
+  
+  if'reverse suction' in profile.keys(): 
+    coor_suction = np.flip(coor_suction, axis=0)
+  if'reverse pressure' in profile.keys(): 
+    coor_pressure = np.flip(coor_pressure, axis=0)
+  if 'scaled by' in profile:
     coor_suction = coor_suction*profile['scaled by']
     coor_pressure = coor_pressure*profile['scaled by']
 
@@ -104,10 +108,10 @@ def getExtrusionParameters(f):
     extrude_heights = []
   
   else:
-    if not mesh['side walls boundary layer']:
+    if 'side walls boundary layer' not in mesh.keys():
       extrude_num = [mesh['n layers in z']]
       extrude_heights = []
-
+  
     else:
       extrude_size = elementSize(f)
       extrude_num = np.ones(len(extrude_size)*2)
@@ -118,6 +122,7 @@ def getExtrusionParameters(f):
       for i in range(1, len(extrude_heights)):
         extrude_heights[i] = extrude_heights[i-1]+extrude_size[i]
       extrude_heights = extrude_heights/extrude_heights[-1]
+
   return extrude_z, extrude_num, extrude_heights
 
 if __name__ == "__main__":

@@ -10,6 +10,15 @@ profile  = geometry['profile']
 mesh     = f['mesh']
 domain   = f['domain']
 
+dictionaries = [f, geometry, profile, mesh, domain]
+for dictionary in dictionaries:
+  keysToDelete = []
+  for key in dictionary.keys():
+    if not dictionary[key]:
+      keysToDelete.append(key)
+  for key in keysToDelete:
+    del dictionary[key]
+
 coor_suction, coor_pressure = aux.loadProfile(f)
 
 gmsh.initialize()
@@ -70,7 +79,7 @@ line_suction = gmsh.model.occ.add_bspline(points_suction)
 line_pressure = gmsh.model.occ.add_bspline(points_pressure)
 
 yLen_pitch, xLen_pitch = aux.lengths(
-  geometry['stagger angle']*(not profile['stagger included in definition']), 
+  geometry['stagger angle']*(not 'stagger included in definition' in profile.keys()), 
   geometry['pitch']/2
   )
 
@@ -254,7 +263,7 @@ else:
   surface_periodicity_suction  = volume[3][1]
   surface_periodicity_pressure = volume[5][1]
 
-if mesh['periodicities internal match']:
+if 'periodicities internal match' in mesh.keys():
   translation = [1, 0, 0, 2*xLen_pitch, 
                  0, 1, 0, 2*yLen_pitch, 
                  0, 0, 1, 0, 
@@ -264,7 +273,7 @@ if mesh['periodicities internal match']:
 
 refinementFields  = []
 
-if mesh['refine wake']:
+if 'refine wake' in mesh.keys():
   wake = mesh['wake']
   xLen_wake, yLen_wake = aux.lengths(
     -geometry['outlet flow angle'],
@@ -291,7 +300,7 @@ if mesh['refine wake']:
   gmsh.model.mesh.field.setNumber(2, "DistMin", wake['thickness'])
   gmsh.model.mesh.field.setNumber(2, "DistMax", wake['diffuse']*wake['thickness'])
 
-  refinementFields = [2]
+  refinementFields.append(2)
 
 gmsh.model.mesh.field.add("Distance", 3)
 gmsh.model.mesh.field.setNumbers(3, "CurvesList", [line_suction, line_pressure])
@@ -304,9 +313,9 @@ gmsh.model.mesh.field.setNumber(4, "SizeMax", mesh['max size'])
 gmsh.model.mesh.field.setNumber(4, "DistMin", geometry['pitch']/4)
 gmsh.model.mesh.field.setNumber(4, "DistMax", geometry['pitch'])
 
-refinementFields = np.append(refinementFields, 4)
+refinementFields.append(4)
 
-if mesh['refine LE']:
+if 'refine LE' in mesh.keys():
   gmsh.model.mesh.field.add("Distance", 5)
   gmsh.model.mesh.field.setNumbers(5, "PointsList", [points_pressure[0]])
     
@@ -317,9 +326,9 @@ if mesh['refine LE']:
   gmsh.model.mesh.field.setNumber(6, "DistMin", mesh['LE']['radius'])
   gmsh.model.mesh.field.setNumber(6, "DistMax", mesh['LE']['radius']*mesh['LE']['diffuse'])
 
-  refinementFields = np.append(refinementFields, 6)
+  refinementFields.append(6)
 
-if mesh['refine TE']:
+if 'refine TE' in mesh.keys():
   gmsh.model.mesh.field.add("Distance", 7)
   gmsh.model.mesh.field.setNumbers(7, "PointsList", [points_pressure[-1]])
     
@@ -330,7 +339,7 @@ if mesh['refine TE']:
   gmsh.model.mesh.field.setNumber(8, "DistMin", mesh['TE']['radius'])
   gmsh.model.mesh.field.setNumber(8, "DistMax", mesh['TE']['radius']*mesh['TE']['diffuse'])
 
-  refinementFields = np.append(refinementFields, 8)
+  refinementFields.append(8)
 
 gmsh.model.mesh.field.add("Min", 100)
 gmsh.model.mesh.field.setNumbers(100, "FieldsList", refinementFields)
@@ -348,15 +357,24 @@ if mesh['boundary layer'] == 'extruded':
 
 gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
 gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
-gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", mesh['mesh size from curvature'])
 
 gmsh.option.setNumber("Mesh.CharacteristicLengthMax", mesh["max size"] )
-gmsh.option.setNumber("Mesh.CharacteristicLengthMin", mesh["min size"]  )
+gmsh.option.setNumber("Mesh.CharacteristicLengthMin", mesh["min size"] )
+
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
 
-if f['create mesh']: gmsh.model.mesh.generate(3)
-if f['version']:     gmsh.option.setNumber("Mesh.MshFileVersion",f['version'])   
+if 'recombination algorithm' in mesh.keys():
+  gmsh.option.setNumber("Mesh.RecombinationAlgorithm", mesh["recombination algorithm"] )
+
+if 'mesh size from curvature' in mesh.keys():
+  gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", mesh['mesh size from curvature'])
+
+if 'create mesh' in f.keys(): gmsh.model.mesh.generate(3)
+if 'version'     in f.keys(): gmsh.option.setNumber("Mesh.MshFileVersion",f['version'])
+
+  
 gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
 
-if f['save']:    gmsh.write(f['working directory']+f['name']+f['format'])
-if f['run GUI']: gmsh.fltk.run()
+if 'save' in f.keys(): gmsh.write(f['working directory']+f['name']+f['format'])
+
+if 'run GUI' in f.keys(): gmsh.fltk.run()
