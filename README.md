@@ -8,6 +8,7 @@ but it might be a good starting point.
 Internal references can be used in json files. E.g.:
 ```json
  "scaled by"  : {"$ref": "#/geometry/true chord"},
+ "TE"         : {"$ref": "#/mesh/LE"},
 ```
 
 json files cannot handle mathematics. Following will **not** work:
@@ -26,6 +27,13 @@ file in 2.2 can be read. If this is your case, use:
 ```json
  "version"    : 2.2,
 ```
+
+Inputs that can be set to `false` (such as `version`, `save` , ...), can be omitted from 
+the setup.
+
+gmsh is very well documented in 
+[official documentation](https://gmsh.info/doc/texinfo/gmsh.html), but info useful for setup
+of this tool is pointed out [in file in this repository](notesOnGMSH).
 
 ## Refinements 
 
