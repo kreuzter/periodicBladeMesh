@@ -69,24 +69,10 @@ Example of refinement setup in a json file:
 
 ## Boundary layer meshing
 
-Two setups of boundary layer **on the surface of the blade** are available:
-  - extruded BL (preferred, gmsh internal tool)
-  - transfinite mesh around blade (useless without manual tuning)
-
-Inputs for **extruded** boundary layer mesh are:
+Inputs for boundary layer mesh on the blade surface are:
 - size of first layer, 
 - growth ratio and 
 - total thickness.
-
-For the **transfinite** one:
-- number of cells, 
-- growth ratio and 
-- total thickness
-
-To translate between number of cells and size of first layer 
-[online calculators](https://caefn.com/calculator/boundary-layer-mesh) can be used.
-
-### Side walls boundary layer
 
 In specific cases a periodic mesh created with this tool can be used for 3D calculations. 
 In such cases it might be useful to refine the mesh in the vicinity of the side walls.

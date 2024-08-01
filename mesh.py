@@ -123,145 +123,33 @@ loop_outer = gmsh.model.occ.add_curve_loop([
 
 extrude_z, extrude_num, extrude_heights = aux.getExtrusionParameters(f)
 
-if mesh['boundary layer'] != 'transfinite':
 
-  loop_blade = gmsh.model.occ.add_curve_loop([line_pressure, -line_suction])
 
-  surface_whole = gmsh.model.occ.addPlaneSurface([loop_outer, loop_blade])
+loop_blade = gmsh.model.occ.add_curve_loop([line_pressure, -line_suction])
 
-  volume = gmsh.model.occ.extrude([(2,surface_whole)], 
+surface_whole = gmsh.model.occ.addPlaneSurface([loop_outer, loop_blade])
+
+volume = gmsh.model.occ.extrude([(2,surface_whole)], 
                                   0, 0, extrude_z, 
                                   extrude_num, 
                                   extrude_heights,
                                   recombine=True)
 
-  gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
+gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
 
-  gmsh.model.addPhysicalGroup(2, [surface_whole], name = "back" )
-  gmsh.model.addPhysicalGroup(2, [volume[0][1]], name = "front" )
-  gmsh.model.addPhysicalGroup(2, [volume[2][1]], name = "inlet" )
-  gmsh.model.addPhysicalGroup(2, [volume[4][1]], name = "outlet" )
-  gmsh.model.addPhysicalGroup(2, [volume[3][1]], name = "periodicity_suction" )
-  gmsh.model.addPhysicalGroup(2, [volume[5][1]], name = "periodicity_pressure" )
-  gmsh.model.addPhysicalGroup(2, [volume[6][1]], name = "blade_pressure" )
-  gmsh.model.addPhysicalGroup(2, [volume[7][1]], name = "blade_suction" )
+gmsh.model.addPhysicalGroup(2, [surface_whole], name = "back" )
+gmsh.model.addPhysicalGroup(2, [volume[0][1]], name = "front" )
+gmsh.model.addPhysicalGroup(2, [volume[2][1]], name = "inlet" )
+gmsh.model.addPhysicalGroup(2, [volume[4][1]], name = "outlet" )
+gmsh.model.addPhysicalGroup(2, [volume[3][1]], name = "periodicity_suction" )
+gmsh.model.addPhysicalGroup(2, [volume[5][1]], name = "periodicity_pressure" )
+gmsh.model.addPhysicalGroup(2, [volume[6][1]], name = "blade_pressure" )
+gmsh.model.addPhysicalGroup(2, [volume[7][1]], name = "blade_suction" )
 
-  gmsh.model.addPhysicalGroup(3, [volume[1][1]], name = "fluid" )
+gmsh.model.addPhysicalGroup(3, [volume[1][1]], name = "fluid" )
   
-  surface_periodicity_suction  = volume[3][1]
-  surface_periodicity_pressure = volume[5][1]
-
-else:
-  blProperties = mesh['BL properties']
-  coor_pressureInflated = aux.inflateSide(coor_pressure, coor_suction, 
-                                          blProperties['thickness'], a =  1)
-  coor_suctionInflated  = aux.inflateSide(coor_suction, coor_pressure, 
-                                          blProperties['thickness'], a = -1)
-
-  points_pressureInflated = np.zeros(numProfilePoints  , dtype=int)
-  points_suctionInflated  = np.zeros(numProfilePoints  , dtype=int)
-  
-  for i in range(numProfilePoints):
-    points_pressureInflated[i] = gmsh.model.occ.addPoint(
-      coor_pressureInflated[ i, 0 ], 
-      coor_pressureInflated[ i, 1 ], 
-      -domain['thickness']/2
-      )
-    points_suctionInflated[i]  = gmsh.model.occ.addPoint( 
-      coor_suctionInflated[ i, 0 ],  
-      coor_suctionInflated[ i, 1 ], 
-      -domain['thickness']/2
-      )
-
-  for i in [0,-1]:
-    points_suctionInflated[i] = points_pressureInflated[i]
-
-  line_suctionInflated  = gmsh.model.occ.add_bspline(  points_suctionInflated)
-  line_pressureInflated = gmsh.model.occ.add_bspline(points_pressureInflated)
-  line_midlineInflated_i = gmsh.model.occ.add_line(
-    points_pressure[ 0], 
-    points_pressureInflated[ 0]
-    )
-  line_midlineInflated_o = gmsh.model.occ.add_line(
-    points_pressure[-1], 
-    points_pressureInflated[-1]
-    )
-
-  loop_inflated = gmsh.model.occ.add_curve_loop([
-    line_pressureInflated, 
-    -line_suctionInflated
-    ])
-  loop_pressureBlade = gmsh.model.occ.add_curve_loop([
-    line_pressure, 
-    line_midlineInflated_o, 
-    -line_pressureInflated, 
-    -line_midlineInflated_i
-    ])
-  loop_suctionBlade = gmsh.model.occ.add_curve_loop([
-    line_suction, 
-    line_midlineInflated_o, 
-    -line_suctionInflated, 
-    -line_midlineInflated_i
-    ])
-  
-  surface_pressure = gmsh.model.occ.addPlaneSurface([loop_pressureBlade])
-  surface_suction  = gmsh.model.occ.addPlaneSurface([loop_suctionBlade])
-  surface_outer    = gmsh.model.occ.addPlaneSurface([loop_outer, loop_inflated])
-
-  gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
-
-  for curve in [line_pressure, line_suction]:
-    gmsh.model.mesh.setTransfiniteCurve(curve, blProperties['cells on blade'], 
-                                        'Bump', 
-                                        coef=1/blProperties['refinement of edges'])
-
-  for curve in [line_pressureInflated, line_suctionInflated]:
-    gmsh.model.mesh.setTransfiniteCurve(curve, blProperties['cells on blade'], 
-                                        'Bump', 
-                                        coef=1/blProperties['refinement of inflated edges'])
-
-  for curve in [line_midlineInflated_i, line_midlineInflated_o]:
-    gmsh.model.mesh.setTransfiniteCurve(curve, blProperties['num points'], 
-                                        coef=blProperties['ratio'])
-
-  gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
-
-  for surface in [surface_pressure, surface_suction]:
-    gmsh.model.mesh.setTransfiniteSurface(surface, cornerTags=[points_pressure[0], 
-                                                               points_pressure[-1],
-                                                               points_pressureInflated[-1], 
-                                                               points_pressureInflated[0]])
-    gmsh.model.mesh.setRecombine(2, surface)
-    gmsh.model.mesh.setSmoothing(2, surface, 5)
-    
-  gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
-  volume = gmsh.model.occ.extrude([(2,surf) for surf in [surface_outer, 
-                                                         surface_pressure, 
-                                                         surface_suction] ], 
-                                  0, 0, extrude_z, 
-                                  extrude_num, 
-                                  extrude_heights,
-                                  recombine=True)
-
-  gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
-
-  gmsh.model.addPhysicalGroup(2, [surface_outer, 
-                                  surface_pressure, 
-                                  surface_suction], name = "back" )
-  gmsh.model.addPhysicalGroup(2, [volume[8][1], 
-                                  volume[14][1], 
-                                  volume[0][1]], name = "front" )
-  gmsh.model.addPhysicalGroup(2, [volume[2][1]], name = "inlet" )
-  gmsh.model.addPhysicalGroup(2, [volume[4][1]], name = "outlet" )
-  gmsh.model.addPhysicalGroup(2, [volume[3][1]], name = "periodicity_suction" )
-  gmsh.model.addPhysicalGroup(2, [volume[5][1]], name = "periodicity_pressure" )
-  gmsh.model.addPhysicalGroup(2, [volume[6][1]], name = "blade_pressure" )
-  gmsh.model.addPhysicalGroup(2, [volume[16][1]], name = "blade_suction" )
-
-  gmsh.model.addPhysicalGroup(3, [ent[1] for ent in  gmsh.model.getEntities(3)], name = "fluid" )
-
-  surface_periodicity_suction  = volume[3][1]
-  surface_periodicity_pressure = volume[5][1]
+surface_periodicity_suction  = volume[3][1]
+surface_periodicity_pressure = volume[5][1]
 
 if 'periodicities internal match' in mesh.keys():
   translation = [1, 0, 0, 2*xLen_pitch, 
@@ -345,7 +233,7 @@ gmsh.model.mesh.field.add("Min", 100)
 gmsh.model.mesh.field.setNumbers(100, "FieldsList", refinementFields)
 gmsh.model.mesh.field.setAsBackgroundMesh(100)
 
-if mesh['boundary layer'] == 'extruded':
+if 'boundary layer' in mesh.keys():
 
   extrudedBL = gmsh.model.mesh.field.add('BoundaryLayer')
   gmsh.model.mesh.field.setNumbers(extrudedBL, 'CurvesList', [line_suction, line_pressure])
@@ -371,7 +259,6 @@ if 'mesh size from curvature' in mesh.keys():
 
 if 'create mesh' in f.keys(): gmsh.model.mesh.generate(3)
 if 'version'     in f.keys(): gmsh.option.setNumber("Mesh.MshFileVersion",f['version'])
-
   
 gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
 

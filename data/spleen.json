@@ -8,17 +8,14 @@
   "version"    : 2.2,
   "domain" : {
     "thickness"        : 165e-3,
-    "length of inlet"  : 50e-3,
-    "length of outlet" : 50e-3
+    "length of inlet"  : 100e-3,
+    "length of outlet" : 120e-3
   },
   "geometry" : {
     "profile": {
-      "scaled by"        : false,
       "delimiter"        : "\t",
       "name of suction"  : "suction.csv",
       "name of pressure" : "pressure.csv",
-      "reverse suction"   : false,
-      "reverse pressure"  : false,
       "stagger included in definition" : true
     },
     "inlet flow angle"     : 37.3000,
@@ -28,11 +25,11 @@
     "pitch"                : 32.9507e-3
   },
   "mesh" : {
-    "baseline size" : 1e-3,
+    "baseline size" : 0.5e-3,
     "min size"      : 1e-5,
-    "max size"      : 5e-3,
+    "max size"      : 3e-3,
     "n layers in z" : 1,
-    "periodicities internal match" : false,
+    "periodicities internal match" : true,
     "mesh size from curvature" : 0,
     "refine LE": true,
     "LE" : {
@@ -53,17 +50,11 @@
       "size" : 5e-4,
       "diffuse": 3
     },
-    "boundary layer" : "extruded",
+    "boundary layer" : true,
     "BL properties" :  {
       "ratio"     : 1.1,
-      "thickness" : 3e-3,
+      "thickness" : 5e-3,
       "size"      : 1e-5
-    },
-    "side walls boundary layer" : true,
-    "SW BL properties": {
-      "ratio"     : 1.1,
-      "size last" : 1e-3,
-      "size first": 1e-5
     }
   }
 }

@@ -44,7 +44,7 @@
       "size" :       5e-4,
       "diffuse": 10
     },
-    "boundary layer" : "extruded",
+    "boundary layer" : true,
     "BL properties" :  {
       "ratio"     : 1.07,
       "thickness" : 5e-3,
