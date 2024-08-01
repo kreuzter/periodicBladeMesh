@@ -106,7 +106,7 @@ Parameters for 3D setup are:
 For 2D cases set `"n layers in z" : 1`, other parameters are then not taken into account.
 
 It should be noted, that if in current implementation `n layers in z` is ignored when 
-meshing side walls. Number of cells in z direction is reported. 
+creating boundary layer mesh on side walls. Number of cells in z direction is reported. 
 
 ## Test cases:
 
