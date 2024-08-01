@@ -33,7 +33,7 @@ the setup.
 
 gmsh is very well documented in 
 [official documentation](https://gmsh.info/doc/texinfo/gmsh.html), but info useful for setup
-of this tool is pointed out [in file in this repository](notesOnGMSH).
+of this tool is pointed out [in file in this repository](notesOnGMSH.md).
 
 ## Refinements 
 
