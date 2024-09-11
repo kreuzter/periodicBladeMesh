@@ -31,6 +31,9 @@ points_pressure = np.zeros(numProfilePoints  , dtype=int)
 points_suction  = np.zeros(numProfilePoints  , dtype=int)
 points_midline  = np.zeros(numProfilePoints+2, dtype=int)
 
+midline_x = (coor_pressure[:, 0] + coor_suction[:, 0])/2
+midline_y = (coor_pressure[:, 1] + coor_suction[:, 1])/2
+
 for i in range(numProfilePoints):
 
   points_pressure[i] = gmsh.model.occ.addPoint(
@@ -42,8 +45,8 @@ for i in range(numProfilePoints):
     coor_suction[i, 1],
     -domain['thickness']/2)
   points_midline[i+1]  = gmsh.model.occ.addPoint(
-    (coor_pressure[ i, 0 ]+coor_suction[ i, 0 ])/2, 
-    (coor_pressure[ i, 1 ]+coor_suction[ i, 1 ])/2,
+    midline_x[i],
+    midline_y[i],
     -domain['thickness']/2
     )
 
@@ -52,10 +55,14 @@ for i in [0, -1]:
 
 points_midline[1] = points_pressure[0]
 points_midline[-2] = points_pressure[-1]
-  
+
 xLen_inlet, yLen_inlet = aux.lengths(
   geometry['inlet flow angle'],
   domain['length of inlet']
+  )
+xLen_outlet, yLen_outlet = aux.lengths(
+  -geometry['outlet flow angle'],
+  domain['length of outlet']
   )
 
 points_midline[0] =   gmsh.model.occ.addPoint(
@@ -64,10 +71,6 @@ points_midline[0] =   gmsh.model.occ.addPoint(
     -domain['thickness']/2
     )
 
-xLen_outlet, yLen_outlet = aux.lengths(
-  -geometry['outlet flow angle'],
-  domain['length of outlet']
-  )
 points_midline[-1] =   gmsh.model.occ.addPoint(
     (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_outlet, 
     (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_outlet,
@@ -123,8 +126,6 @@ loop_outer = gmsh.model.occ.add_curve_loop([
 
 extrude_z, extrude_num, extrude_heights = aux.getExtrusionParameters(f)
 
-
-
 loop_blade = gmsh.model.occ.add_curve_loop([line_pressure, -line_suction])
 
 surface_whole = gmsh.model.occ.addPlaneSurface([loop_outer, loop_blade])
@@ -147,15 +148,21 @@ gmsh.model.addPhysicalGroup(2, [volume[6][1]], name = "blade_pressure" )
 gmsh.model.addPhysicalGroup(2, [volume[7][1]], name = "blade_suction" )
 
 gmsh.model.addPhysicalGroup(3, [volume[1][1]], name = "fluid" )
-  
-surface_periodicity_suction  = volume[3][1]
-surface_periodicity_pressure = volume[5][1]
 
 if 'periodicities internal match' in mesh.keys():
-  translation = [1, 0, 0, 2*xLen_pitch, 
-                 0, 1, 0, 2*yLen_pitch, 
+
+  periodicities = [3,5]
+  if 'switch periodicities' in mesh.keys():
+    periodicities = [5,3]  
+    
+  surface_periodicity_suction  = volume[periodicities[0]][1]
+  surface_periodicity_pressure = volume[periodicities[1]][1]
+
+  translation = [1, 0, 0, 2*xLen_pitch*(-1)**('switch periodicities' in mesh.keys()), 
+                 0, 1, 0, 2*yLen_pitch*(-1)**('switch periodicities' in mesh.keys()), 
                  0, 0, 1, 0, 
                  0, 0, 0, 1]
+  
   gmsh.model.mesh.setPeriodic(2, [surface_periodicity_suction], 
                                  [surface_periodicity_pressure], translation)
 
@@ -243,25 +250,36 @@ if 'boundary layer' in mesh.keys():
   gmsh.model.mesh.field.setNumber(extrudedBL, 'Thickness', mesh['BL properties']['thickness'])
   gmsh.model.mesh.field.setAsBoundaryLayer(extrudedBL)
 
-gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+if 'extend from boundary' in mesh.keys():
+  gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 1)
+else: gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+
 gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+
+gmsh.option.setNumber("General.NumThreads", 4)
 
 gmsh.option.setNumber("Mesh.CharacteristicLengthMax", mesh["max size"] )
 gmsh.option.setNumber("Mesh.CharacteristicLengthMin", mesh["min size"] )
 
 gmsh.option.setNumber("Mesh.RecombineAll", 1)
+gmsh.option.setNumber("Mesh.RecombineMinimumQuality",   0.3)
+gmsh.option.setNumber("Mesh.RecombineOptimizeTopology",25)
+
+gmsh.model.mesh.setCompound(1, [line_pressure, line_suction])
 
 if 'recombination algorithm' in mesh.keys():
   gmsh.option.setNumber("Mesh.RecombinationAlgorithm", mesh["recombination algorithm"] )
+
+if 'mesh algorithm' in mesh.keys():
+  gmsh.option.setNumber("Mesh.Algorithm", mesh["mesh algorithm"] )
 
 if 'mesh size from curvature' in mesh.keys():
   gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", mesh['mesh size from curvature'])
 
 if 'create mesh' in f.keys(): gmsh.model.mesh.generate(3)
 if 'version'     in f.keys(): gmsh.option.setNumber("Mesh.MshFileVersion",f['version'])
-  
+
 gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
 
 if 'save' in f.keys(): gmsh.write(f['working directory']+f['name']+f['format'])
-
 if 'run GUI' in f.keys(): gmsh.fltk.run()
