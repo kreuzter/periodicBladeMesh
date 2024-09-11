@@ -30,7 +30,10 @@
     "max size"      : 3e-3,
     "n layers in z" : 1,
     "periodicities internal match" : true,
+    "switch periodicities" : true,
     "mesh size from curvature" : 0,
+    "extend from boundary" : true,
+    "mesh algorithm": 8,
     "refine LE": true,
     "LE" : {
       "radius" : 1e-3,
@@ -40,7 +43,7 @@
     "refine TE": true,
     "TE" : {
       "radius" : 0.4e-3,
-      "size" : 0.5e-4,
+      "size" : 1e-4,
       "diffuse": 10
     },
     "refine wake": true,
@@ -53,7 +56,7 @@
     "boundary layer" : true,
     "BL properties" :  {
       "ratio"     : 1.1,
-      "thickness" : 5e-3,
+      "thickness" : 3e-3,
       "size"      : 1e-5
     }
   }

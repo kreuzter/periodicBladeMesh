@@ -16,6 +16,15 @@ def initialize():
   featuresFile = open(args.path)
   f = json.load(featuresFile)
   
+  dictionaries = [f, f['geometry'], f['geometry']['profile'], f['mesh'], f['domain']]
+  for dictionary in dictionaries:
+    keysToDelete = []
+    for key in dictionary.keys():
+      if not dictionary[key]:
+        keysToDelete.append(key)
+    for key in keysToDelete:
+      del dictionary[key]
+
   return f
 
 def loadProfile(features):

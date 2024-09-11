@@ -10,15 +10,6 @@ profile  = geometry['profile']
 mesh     = f['mesh']
 domain   = f['domain']
 
-dictionaries = [f, geometry, profile, mesh, domain]
-for dictionary in dictionaries:
-  keysToDelete = []
-  for key in dictionary.keys():
-    if not dictionary[key]:
-      keysToDelete.append(key)
-  for key in keysToDelete:
-    del dictionary[key]
-
 coor_suction, coor_pressure = aux.loadProfile(f)
 
 gmsh.initialize()
@@ -29,10 +20,57 @@ numProfilePoints = np.size(coor_suction, axis=0)
 
 points_pressure = np.zeros(numProfilePoints  , dtype=int)
 points_suction  = np.zeros(numProfilePoints  , dtype=int)
-points_midline  = np.zeros(numProfilePoints+2, dtype=int)
+
+xLen_inlet, yLen_inlet = aux.lengths(
+  geometry['inlet flow angle'],
+  domain['length of inlet']
+  )
+xLen_outlet, yLen_outlet = aux.lengths(
+  -geometry['outlet flow angle'],
+  domain['length of outlet']
+  )
 
 midline_x = (coor_pressure[:, 0] + coor_suction[:, 0])/2
 midline_y = (coor_pressure[:, 1] + coor_suction[:, 1])/2
+
+midline_x = np.append(
+  (coor_pressure[ 0, 0 ]+coor_suction[ 0, 0 ])/2 - xLen_inlet, 
+  midline_x
+)
+midline_x = np.append(
+  midline_x,
+  (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_outlet
+)
+
+midline_y = np.append(
+  (coor_pressure[ 0, 1 ]+coor_suction[ 0, 1 ])/2 - yLen_inlet, 
+  midline_y
+)
+midline_y = np.append(
+  midline_y,
+  (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_outlet
+)
+
+if 'smooth midline' in mesh.keys():
+  midline_xSmooth = np.linspace(midline_x[1], midline_x[-2], 20)
+  midline_xSmooth = np.append(
+    (coor_pressure[ 0, 0 ]+coor_suction[ 0, 0 ])/2 - xLen_inlet, 
+    midline_xSmooth
+  )
+  midline_xSmooth = np.append(
+    midline_xSmooth,
+    (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_outlet
+  )
+
+  midline_ySmooth = np.interp(
+    midline_xSmooth.astype(float), 
+    midline_x.astype(float), 
+    midline_y.astype(float))
+
+  midline_x = midline_xSmooth
+  midline_y = midline_ySmooth
+
+points_midline  = np.zeros(len(midline_x), dtype=int)
 
 for i in range(numProfilePoints):
 
@@ -44,7 +82,9 @@ for i in range(numProfilePoints):
     coor_suction[i, 0], 
     coor_suction[i, 1],
     -domain['thickness']/2)
-  points_midline[i+1]  = gmsh.model.occ.addPoint(
+  
+for i in range(len(midline_x)):
+  points_midline[i]  = gmsh.model.occ.addPoint(
     midline_x[i],
     midline_y[i],
     -domain['thickness']/2
@@ -55,27 +95,6 @@ for i in [0, -1]:
 
 points_midline[1] = points_pressure[0]
 points_midline[-2] = points_pressure[-1]
-
-xLen_inlet, yLen_inlet = aux.lengths(
-  geometry['inlet flow angle'],
-  domain['length of inlet']
-  )
-xLen_outlet, yLen_outlet = aux.lengths(
-  -geometry['outlet flow angle'],
-  domain['length of outlet']
-  )
-
-points_midline[0] =   gmsh.model.occ.addPoint(
-    (coor_pressure[ 0, 0 ]+coor_suction[ 0, 0 ])/2 - xLen_inlet, 
-    (coor_pressure[ 0, 1 ]+coor_suction[ 0, 1 ])/2 - yLen_inlet,
-    -domain['thickness']/2
-    )
-
-points_midline[-1] =   gmsh.model.occ.addPoint(
-    (coor_pressure[ -1, 0 ]+coor_suction[ -1, 0 ])/2 + xLen_outlet, 
-    (coor_pressure[ -1, 1 ]+coor_suction[ -1, 1 ])/2 + yLen_outlet,
-    -domain['thickness']/2
-    )
 
 line_midline = gmsh.model.occ.add_bspline(points_midline)
 line_suction = gmsh.model.occ.add_bspline(points_suction)

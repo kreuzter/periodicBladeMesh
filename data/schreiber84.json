@@ -26,14 +26,15 @@
   "mesh" : {
     "baseline size" : 0.7e-3,
     "min size"      : 1.0e-5,
-    "max size"      : 5.0e-3,
-    "n layers in z" : 120,
+    "max size"      : 3.0e-3,
+    "n layers in z" : 1,
     "mesh algorithm": 8,
     "extend from boundary" : true,
     "mesh size from curvature" : 30,
+    "smooth midline" : true,
     "refine LE": true,
     "LE" : {
-      "radius" : 25e-3,
+      "radius" : 20e-3,
       "size"   : {"$ref": "#/mesh/baseline size"},
       "diffuse": 2
     },
