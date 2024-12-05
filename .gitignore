@@ -2,4 +2,5 @@
 *.msh
 *.geo
 *.gmsh
+noGit_*
 __pycache__/

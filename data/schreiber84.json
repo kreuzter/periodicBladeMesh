@@ -30,9 +30,10 @@
     "n layers in z" : 1,
     "mesh algorithm": 8,
     "extend from boundary" : true,
-    "mesh size from curvature" : 30,
+    "mesh size from curvature" : 50,
     "smooth midline" : true,
-    "refine LE": true,
+    "level of sharpness" : 5,
+    "refine LE": false,
     "LE" : {
       "radius" : 20e-3,
       "size"   : {"$ref": "#/mesh/baseline size"},

@@ -1,5 +1,5 @@
 { 
-  "name" : "spleen",
+  "name" : "spleen_smooth",
   "working directory" : "data/spleen/",
   "create mesh": true,
   "run GUI"    : true,
@@ -7,9 +7,9 @@
   "format"     : ".msh",
   "version"    : 2.2,
   "domain" : {
-    "thickness"        : 165e-3,
-    "length of inlet"  : 100e-3,
-    "length of outlet" : 120e-3
+    "thickness"        : 1e-3,
+    "length of inlet"  : {"$ref": "#/geometry/true chord"},
+    "length of outlet" : 0.0784275
   },
   "geometry" : {
     "profile": {
@@ -27,20 +27,22 @@
   "mesh" : {
     "baseline size" : 0.5e-3,
     "min size"      : 1e-5,
-    "max size"      : 3e-3,
+    "max size"      : 2e-3,
     "n layers in z" : 1,
     "periodicities internal match" : true,
     "switch periodicities" : true,
-    "mesh size from curvature" : 0,
+    "mesh size from curvature" : 50,
+    "smooth midline" : true,
+    "level of sharpness" : 10,
     "extend from boundary" : true,
     "mesh algorithm": 8,
-    "refine LE": true,
+    "refine LE": false,
     "LE" : {
       "radius" : 1e-3,
       "size" : 1e-4,
       "diffuse": 10
     },
-    "refine TE": true,
+    "refine TE": false,
     "TE" : {
       "radius" : 0.4e-3,
       "size" : 1e-4,
@@ -49,9 +51,9 @@
     "refine wake": true,
     "wake" : {
       "length" : 100e-3,
-      "thickness" : 5e-3,
-      "size" : 5e-4,
-      "diffuse": 3
+      "thickness" : 15e-3,
+      "size" : {"$ref": "#/mesh/baseline size"},
+      "diffuse": 2
     },
     "boundary layer" : true,
     "BL properties" :  {

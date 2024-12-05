@@ -52,7 +52,7 @@ midline_y = np.append(
 )
 
 if 'smooth midline' in mesh.keys():
-  midline_xSmooth = np.linspace(midline_x[1], midline_x[-2], 20)
+  midline_xSmooth = np.linspace(midline_x[1], midline_x[-2], mesh['level of sharpness'])
   midline_xSmooth = np.append(
     (coor_pressure[ 0, 0 ]+coor_suction[ 0, 0 ])/2 - xLen_inlet, 
     midline_xSmooth
@@ -96,9 +96,9 @@ for i in [0, -1]:
 points_midline[1] = points_pressure[0]
 points_midline[-2] = points_pressure[-1]
 
-line_midline = gmsh.model.occ.add_bspline(points_midline)
-line_suction = gmsh.model.occ.add_bspline(points_suction)
-line_pressure = gmsh.model.occ.add_bspline(points_pressure)
+line_midline  = gmsh.model.occ.add_bspline(points_midline)
+line_suction  = gmsh.model.occ.add_spline(points_suction)
+line_pressure = gmsh.model.occ.add_spline(points_pressure)
 
 yLen_pitch, xLen_pitch = aux.lengths(
   geometry['stagger angle']*(not 'stagger included in definition' in profile.keys()), 
@@ -113,9 +113,6 @@ points_upperPeriodicity = gmsh.model.occ.copy([
   (0, points_midline[-1])
   ])
 
-gmsh.model.occ.translate(line_upperPeriodicity, xLen_pitch, yLen_pitch, 0)
-gmsh.model.occ.translate(points_upperPeriodicity, xLen_pitch, yLen_pitch, 0)
-
 line_lowerPeriodicity = gmsh.model.occ.copy([
   (1, line_midline)
   ])
@@ -124,7 +121,19 @@ points_lowerPeriodicity = gmsh.model.occ.copy([
   (0, points_midline[-1])
   ])
 
-gmsh.model.occ.translate(line_lowerPeriodicity, -xLen_pitch, -yLen_pitch, 0)
+centerOfProfile = [(coor_pressure[int(numProfilePoints/2), 0]+coor_suction[int(numProfilePoints/2), 0])/2,
+                   (coor_pressure[int(numProfilePoints/2), 1]+coor_suction[int(numProfilePoints/2), 1])/2]
+
+if 'dilate' in geometry.keys():
+  gmsh.model.occ.dilate(  line_upperPeriodicity ,centerOfProfile[0], centerOfProfile[1], 0, 1,1-geometry['dilate'],1)
+  gmsh.model.occ.dilate(points_upperPeriodicity ,centerOfProfile[0], centerOfProfile[1], 0, 1,1-geometry['dilate'],1)
+  gmsh.model.occ.dilate(  line_lowerPeriodicity ,centerOfProfile[0], centerOfProfile[1], 0, 1,1-geometry['dilate'],1)
+  gmsh.model.occ.dilate(points_lowerPeriodicity ,centerOfProfile[0], centerOfProfile[1], 0, 1,1-geometry['dilate'],1)
+
+gmsh.model.occ.translate(  line_upperPeriodicity, xLen_pitch, yLen_pitch, 0)
+gmsh.model.occ.translate(points_upperPeriodicity, xLen_pitch, yLen_pitch, 0)
+
+gmsh.model.occ.translate(  line_lowerPeriodicity, -xLen_pitch, -yLen_pitch, 0)
 gmsh.model.occ.translate(points_lowerPeriodicity, -xLen_pitch, -yLen_pitch, 0)
 
 line_inlet  = gmsh.model.occ.add_line(
