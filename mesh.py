@@ -264,8 +264,8 @@ gmsh.model.mesh.field.add("Threshold", 4)
 gmsh.model.mesh.field.setNumber(4, "InField", 3)
 gmsh.model.mesh.field.setNumber(4, "SizeMin", mesh['baseline size'])
 gmsh.model.mesh.field.setNumber(4, "SizeMax", mesh['max size'])
-gmsh.model.mesh.field.setNumber(4, "DistMin", geometry['pitch']*mesh['diffuse baseline 1'] if 'diffuse baseline 1' not in mesh.keys() else geometry['pitch']/4)
-gmsh.model.mesh.field.setNumber(4, "DistMax", geometry['pitch']*mesh['diffuse baseline 2'] if 'diffuse baseline 2' not in mesh.keys() else geometry['pitch']  )
+gmsh.model.mesh.field.setNumber(4, "DistMin", geometry['pitch']*mesh['diffuse baseline 1'] if 'diffuse baseline 1' in mesh.keys() else geometry['pitch']/4)
+gmsh.model.mesh.field.setNumber(4, "DistMax", geometry['pitch']*mesh['diffuse baseline 2'] if 'diffuse baseline 2' in mesh.keys() else geometry['pitch']  )
 
 refinementFields.append(4)
 
