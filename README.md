@@ -94,6 +94,8 @@ For 2D cases set `"n layers in z" : 1`, other parameters are then not taken into
 It should be noted, that if in current implementation `n layers in z` is ignored when 
 creating boundary layer mesh on side walls. Number of cells in z direction is reported. 
 
+To obtain purely planar mesh run with flag `-planar`.
+
 ## Test cases:
 
 ### [SPLEEN](https://doi.org/10.5281/zenodo.7264761) turbine blade
