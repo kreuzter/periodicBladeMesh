@@ -1,6 +1,5 @@
 import numpy as np
 
-import warnings 
 import argparse
 import jsonref as json
 
@@ -11,10 +10,16 @@ def initialize():
 
   parser.add_argument('path', metavar='path', type=str,
                       help='path to json with description of the case')
+  parser.add_argument('-planar', action='store_true',
+                      help='generate truly 2D mesh')
   args = parser.parse_args()
+
+  if args.planar: 
+    print('Truly 2D mesh will be generated.')
 
   featuresFile = open(args.path)
   f = json.load(featuresFile)
+  f['2D'] = args.planar
   
   dictionaries = [f, f['geometry'], f['geometry']['profile'], f['mesh'], f['domain']]
   for dictionary in dictionaries:

@@ -152,47 +152,78 @@ loop_outer = gmsh.model.occ.add_curve_loop([
   -line_lowerPeriodicity[0][1]
   ])
 
-extrude_z, extrude_num, extrude_heights = aux.getExtrusionParameters(f)
-
 loop_blade = gmsh.model.occ.add_curve_loop([line_pressure, -line_suction])
 
 surface_whole = gmsh.model.occ.addPlaneSurface([loop_outer, loop_blade])
 
-volume = gmsh.model.occ.extrude([(2,surface_whole)], 
-                                  0, 0, extrude_z, 
-                                  extrude_num, 
-                                  extrude_heights,
-                                  recombine=True)
+if '2D' not in f.keys():
+  extrude_z, extrude_num, extrude_heights = aux.getExtrusionParameters(f)
+  volume = gmsh.model.occ.extrude([(2,surface_whole)], 
+                                    0, 0, extrude_z, 
+                                    extrude_num, 
+                                    extrude_heights,
+                                    recombine=True)
 
-gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
+  gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
 
-gmsh.model.addPhysicalGroup(2, [surface_whole], name = "back" )
-gmsh.model.addPhysicalGroup(2, [volume[0][1]], name = "front" )
-gmsh.model.addPhysicalGroup(2, [volume[2][1]], name = "inlet" )
-gmsh.model.addPhysicalGroup(2, [volume[4][1]], name = "outlet" )
-gmsh.model.addPhysicalGroup(2, [volume[3][1]], name = "periodicity_suction" )
-gmsh.model.addPhysicalGroup(2, [volume[5][1]], name = "periodicity_pressure" )
-gmsh.model.addPhysicalGroup(2, [volume[6][1]], name = "blade_pressure" )
-gmsh.model.addPhysicalGroup(2, [volume[7][1]], name = "blade_suction" )
+  gmsh.model.addPhysicalGroup(2, [surface_whole], name = "back" )
+  gmsh.model.addPhysicalGroup(2, [volume[0][1]], name = "front" )
+  gmsh.model.addPhysicalGroup(2, [volume[2][1]], name = "inlet" )
+  gmsh.model.addPhysicalGroup(2, [volume[4][1]], name = "outlet" )
+  gmsh.model.addPhysicalGroup(2, [volume[3][1]], name = "periodicity_suction" )
+  gmsh.model.addPhysicalGroup(2, [volume[5][1]], name = "periodicity_pressure" )
+  gmsh.model.addPhysicalGroup(2, [volume[6][1]], name = "blade_pressure" )
+  gmsh.model.addPhysicalGroup(2, [volume[7][1]], name = "blade_suction" )
 
-gmsh.model.addPhysicalGroup(3, [volume[1][1]], name = "fluid" )
+  gmsh.model.addPhysicalGroup(3, [volume[1][1]], name = "fluid" )
 
-if 'periodicities internal match' in mesh.keys():
+  if 'periodicities internal match' in mesh.keys():
 
-  periodicities = [3,5]
-  if 'switch periodicities' in mesh.keys():
-    periodicities = [5,3]  
+    periodicities = [3,5]
+    if 'switch periodicities' in mesh.keys():
+      periodicities = [5,3]  
+      
+    surface_periodicity_suction  = volume[periodicities[0]][1]
+    surface_periodicity_pressure = volume[periodicities[1]][1]
+
+    translation = [1, 0, 0, 2*xLen_pitch*(-1)**('switch periodicities' in mesh.keys()), 
+                  0, 1, 0, 2*yLen_pitch*(-1)**('switch periodicities' in mesh.keys()), 
+                  0, 0, 1, 0, 
+                  0, 0, 0, 1]
     
-  surface_periodicity_suction  = volume[periodicities[0]][1]
-  surface_periodicity_pressure = volume[periodicities[1]][1]
+    gmsh.model.mesh.setPeriodic(2, [surface_periodicity_suction], 
+                                  [surface_periodicity_pressure], translation)
 
-  translation = [1, 0, 0, 2*xLen_pitch*(-1)**('switch periodicities' in mesh.keys()), 
-                 0, 1, 0, 2*yLen_pitch*(-1)**('switch periodicities' in mesh.keys()), 
-                 0, 0, 1, 0, 
-                 0, 0, 0, 1]
-  
-  gmsh.model.mesh.setPeriodic(2, [surface_periodicity_suction], 
-                                 [surface_periodicity_pressure], translation)
+else:
+
+  gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
+
+  gmsh.model.addPhysicalGroup(1, [line_inlet] , name = "inlet" )
+  gmsh.model.addPhysicalGroup(1, [line_outlet], name = "outlet" )
+  gmsh.model.addPhysicalGroup(1, [line_upperPeriodicity[0][1]], name = "periodicity_suction" )
+  gmsh.model.addPhysicalGroup(1, [line_lowerPeriodicity[0][1]], name = "periodicity_pressure" )
+  gmsh.model.addPhysicalGroup(1, [line_pressure], name = "blade_pressure" )
+  gmsh.model.addPhysicalGroup(1, [line_suction], name = "blade_suction" )
+
+  gmsh.model.addPhysicalGroup(2, [surface_whole], name = "fluid" )
+
+  if 'periodicities internal match' in mesh.keys():
+
+    periodicities = [line_upperPeriodicity, line_lowerPeriodicity]
+    if 'switch periodicities' in mesh.keys():
+      periodicities = [line_lowerPeriodicity, line_upperPeriodicity] 
+      
+    surface_periodicity_suction  = periodicities[0]
+    surface_periodicity_pressure = periodicities[1]
+
+    translation = [1, 0, 0, 2*xLen_pitch*(-1)**('switch periodicities' in mesh.keys()), 
+                  0, 1, 0, 2*yLen_pitch*(-1)**('switch periodicities' in mesh.keys()), 
+                  0, 0, 1, 0, 
+                  0, 0, 0, 1]
+    
+    gmsh.model.mesh.setPeriodic(1, [surface_periodicity_suction [0][1]], 
+                                   [surface_periodicity_pressure[0][1]], translation)
+
 
 refinementFields  = []
 
@@ -304,7 +335,7 @@ if 'mesh algorithm' in mesh.keys():
 if 'mesh size from curvature' in mesh.keys():
   gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", mesh['mesh size from curvature'])
 
-if 'create mesh' in f.keys(): gmsh.model.mesh.generate(3)
+if 'create mesh' in f.keys(): gmsh.model.mesh.generate(2 if '2D' in f.keys() else 3)
 if 'version'     in f.keys(): gmsh.option.setNumber("Mesh.MshFileVersion",f['version'])
 
 gmsh.model.occ.synchronize(), gmsh.model.geo.synchronize()
