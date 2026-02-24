@@ -1,3 +1,6 @@
+This project was migrated to [GitLab](https://gitlab.com/cfdgeometryandmeshes/periodicBladeMesh). 
+This (GH) repository is not kept up to date.
+
 # periodicBladeMesh
 (py)gmsh based tool for the simplest turbomachinery mesh
 
